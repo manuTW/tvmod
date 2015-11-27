@@ -46,11 +46,13 @@ CUR_KDIR=${TOP_KDIR}/linux-${KVER}-${ARCH}
 CUR_MDIR=${TOP_MDIR}/${KVER}
 CUR_RDIR=${TOP_RDIR}/${KVER}/${ARCH}
 
-pushd ${TOP_DIR}
+test ! -d ${TOP_MDIR} && echo Please clone ${TOP_MDIR} before building modules && exit
+pushd ${TOP_KDIR}
 test -d ${CUR_KDIR} && sudo rm -rf ${CUR_KDIR}
 tar xf ${CUR_KDIR}.tgz
 
-test ! -d ${TOP_MDIR} && git clone https://github.com/manuTW/linux-media
+#fails in build env
+#test ! -d ${TOP_MDIR} && git clone https://github.com/manuTW/linux-media
 
 
 [ ! -d ${CUR_KDIR} ] && echo "Missing kernel directory ${CUR_KDIR}" && exit
