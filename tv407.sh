@@ -1,5 +1,12 @@
-#!/bin/sh
-KERNEL_VER=`/bin/uname -r`
+#!/bin/bash
+
+KERNEL_VER=`uname -r |sed s'/-/\./g' |cut -f 1,2,3 -d"."`
+IS_ARM=`uname -m | grep arm`
+if [ -n ${IS_ARM} ]; then
+        ARCH=arm
+else
+        ARCH=`uname -r`
+fi
 DVB_DIR=`pwd`
 LOG_FILE=/tmp/dvb.log
 PATH=/bin:/sbin:$PATH
@@ -17,8 +24,7 @@ MOD_LIST="i2c-core rc-core dvb-core dvb-usb dvb_usb_v2 mxl5005s qt1010 mt2060 td
 # Insert kernel modules
 function check_load_modules()
 {
-	KERNEL_ARCH=${KERNEL_VER}/`/bin/uname -m`
-	MOD_PATH=${DVB_DIR}/modules/${KERNEL_ARCH}
+	MOD_PATH=${DVB_DIR}/modules/${KERNEL_VER}/${ARCH}
 	FW_PATH=${DVB_DIR}/firmware
 	SYS_FW_PATH=/lib/firmware
 	INS_LIST=
@@ -31,7 +37,7 @@ function check_load_modules()
 	else
 		ln -s ${FW_PATH} ${SYS_FW_PATH}
 	fi
-}
+
 	#load
 	for mm in ${MOD_LIST}; do
 		test -e ${MOD_PATH}/${mm}.ko && {
