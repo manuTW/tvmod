@@ -48,8 +48,8 @@ CUR_RDIR=${TOP_RDIR}/${KVER}/${ARCH}
 
 test ! -d ${TOP_MDIR} && echo Please clone ${TOP_MDIR} before building modules && exit
 pushd ${TOP_KDIR}
-test -d ${CUR_KDIR} && sudo rm -rf ${CUR_KDIR}
-tar xf ${CUR_KDIR}.tbz
+#test -d ${CUR_KDIR} && sudo rm -rf ${CUR_KDIR}
+#tar xf ${CUR_KDIR}.tbz
 
 #fails in build env
 #test ! -d ${TOP_MDIR} && git clone https://github.com/manuTW/linux-media
