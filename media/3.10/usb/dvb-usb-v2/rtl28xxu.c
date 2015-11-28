@@ -1366,6 +1366,27 @@ static const struct dvb_usb_device_properties rtl2832u_props = {
 	},
 };
 
+static const struct dvb_usb_device_properties rtl2832u_noRC_props = {
+	.driver_name = KBUILD_MODNAME,
+	.owner = THIS_MODULE,
+	.adapter_nr = adapter_nr,
+	.size_of_priv = sizeof(struct rtl28xxu_priv),
+
+	.power_ctrl = rtl2832u_power_ctrl,
+	.i2c_algo = &rtl28xxu_i2c_algo,
+	.read_config = rtl2832u_read_config,
+	.frontend_attach = rtl2832u_frontend_attach,
+	.tuner_attach = rtl2832u_tuner_attach,
+	.init = rtl28xxu_init,
+
+	.num_adapters = 1,
+	.adapter = {
+		{
+			.stream = DVB_USB_STREAM_BULK(0x81, 6, 8 * 512),
+		},
+	},
+};
+
 static const struct usb_device_id rtl28xxu_id_table[] = {
 	{ DVB_USB_DEVICE(USB_VID_REALTEK, USB_PID_REALTEK_RTL2831U,
 		&rtl2831u_props, "Realtek RTL2831U reference design", NULL) },
@@ -1408,6 +1429,8 @@ static const struct usb_device_id rtl28xxu_id_table[] = {
 		&rtl2832u_props, "Compro VideoMate U620F", NULL) },
 	{ DVB_USB_DEVICE(USB_VID_KWORLD_2, 0xd394,
 		&rtl2832u_props, "MaxMedia HU394-T", NULL) },
+	{ DVB_USB_DEVICE(0x1B80, 0xD3A4,
+		&rtl2832u_noRC_props, "QNAP DVB-T Stick", NULL) },
 	{ }
 };
 MODULE_DEVICE_TABLE(usb, rtl28xxu_id_table);

@@ -1648,6 +1648,9 @@ static const struct usb_device_id rtl28xxu_id_table[] = {
 		&rtl2832u_props, "Sveon STV21", NULL) },
 	{ DVB_USB_DEVICE(USB_VID_KWORLD_2, USB_PID_SVEON_STV27,
 		&rtl2832u_props, "Sveon STV27", NULL) },
+	{ DVB_USB_DEVICE(0x1B80, 0xD3A4,
+		&rtl2832u_props, "QNAP DVB-T Stick", NULL) },
+
 
 	/* RTL2832P devices: */
 	{ DVB_USB_DEVICE(USB_VID_HANFTEK, 0x0131,
