@@ -40,24 +40,32 @@ export ARCH
 }
 
 TOP_KDIR=`pwd`
-TOP_MDIR=${TOP_KDIR}/linux-media
+TOP_MDIR=${TOP_KDIR}/media
 TOP_RDIR=${TOP_KDIR}/release
 CUR_KDIR=${TOP_KDIR}/linux-${KVER}-${ARCH}
 CUR_MDIR=${TOP_MDIR}/${KVER}
 CUR_RDIR=${TOP_RDIR}/${KVER}/${ARCH}
 
-test ! -d ${TOP_MDIR} && echo Please clone ${TOP_MDIR} before building modules && exit
-pushd ${TOP_KDIR}
+#ver with first two number
+KVER2=`echo ${KVER}| cut -f1,2 -d"."`
+
+#determine media directory
+#if a.b.c is not present, try a.b instead
+test ! -d ${TOP_MDIR} && echo Missing ${TOP_MDIR} ...stop build && exit
+test ! -d ${CUR_MDIR} && {
+	if test -d ${TOP_MDIR}/${KVER2}; then
+		CUR_MDIR=${TOP_MDIR}/${KVER2}
+	else
+		echo "Missing media directory for ${KVER}"
+		exit
+	fi
+}
+
 #test -d ${CUR_KDIR} && sudo rm -rf ${CUR_KDIR}
-#tar xf ${CUR_KDIR}.tbz
 
-#fails in build env
-#test ! -d ${TOP_MDIR} && git clone https://github.com/manuTW/linux-media
-
-
+echo "To build ${CUR_MDIR}"
+echo " against ${CUR_KDIR} ..."
 [ ! -d ${CUR_KDIR} ] && echo "Missing kernel directory ${CUR_KDIR}" && exit
-[ ${KVER} = "3.12.6" -a ! -d ${CUR_MDIR} ] && mv ${TOP_MDIR}/3.12 ${CUR_MDIR}
 ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} make -C ${CUR_KDIR} M=${CUR_MDIR} clean
 ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} make -C ${CUR_KDIR} M=${CUR_MDIR}
 copy_mod ${CUR_MDIR} ${CUR_RDIR}
-popd
