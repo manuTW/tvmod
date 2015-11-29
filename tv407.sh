@@ -1,12 +1,9 @@
 #!/bin/bash
+#LIB_MODULE is the directory modules are placed
 
 KERNEL_VER=`uname -r |sed s'/-/\./g' |cut -f 1,2,3 -d"."`
-IS_ARM=`uname -m | grep arm`
-if [ -n ${IS_ARM} ]; then
-        ARCH=arm
-else
-        ARCH=`uname -r`
-fi
+ARCH=`uname -m`
+if [[ $ARCH =~ arm* ]]; then ARCH=arm; fi
 DVB_DIR=`pwd`
 LOG_FILE=/tmp/dvb.log
 PATH=/bin:/sbin:$PATH
@@ -88,8 +85,11 @@ case "$1" in
     $0 start
     ;;
 
+  install)
+  uninstall)
+    ;;
   *)
-    echo "Usage: $0 {start|stop|restart}"
+    echo "Usage: $0 {start|stop|restart|install|uninstall}"
     exit 1
 esac
 
