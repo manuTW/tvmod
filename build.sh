@@ -29,9 +29,10 @@ copy_mod() {
 #
 #determine media directory
 #
-# $TOP_MDIR - directory "media" should present at top directory
-# $CUR_MDIR - directory $KERV should present as subdir of "media",
+# In : $TOP_MDIR - directory "media" should present at top directory
+#      $CUR_MDIR - directory $KERV should present as subdir of "media",
 #		use a.b if a.b.c is not present
+# Out: KVER2 - first two number of kernel version
 check_mdir() {
 	#ver with first two number
 	KVER2=`echo ${KVER}| cut -f1,2 -d"."`
@@ -61,6 +62,32 @@ exp_vars() {
 }
 
 
+#
+# determine kernel dir to work with
+# precedence
+#  - TOP_KDIR
+#  - Kernel of build system
+# In : $TOP_KDIR
+#      $KVER/$KVER2
+#      $ARCH
+#      $CUR_KDIR
+#      
+check_kdir() {
+	CUR_KDIR=${TOP_KDIR}/linux-${KVER}-${ARCH}
+	if [ ! -d ${CUR_KDIR} ]; then
+		if [ -d Kernel ];then CUR_KDIR=Kernel ; fi
+	fi
+	test ! -f ${CUR_KDIR}/.config && echo "Kernel ${CUR_KDIR} is not configured !" && exit
+	#make sure the kernel is media config enabled and make again
+	if [ ! -f ${CUR_KDIR}/.add_media ]; then
+		cat ${TOP_KDIR}/modify/modify-${KVER2}.cfg >> ${CUR_KDIR}/.config
+		touch ${CUR_KDIR}/.add_media
+		pushd ${CUR_KDIR} >/dev/null
+		make
+		popd >/dev/null
+	fi
+}
+
 KVER=$1
 ARCH=${2:-`uname -m`}
 [ -z "${KVER}" ] && echo Please specify the kernel version && exit
@@ -69,13 +96,13 @@ ARCH=${2:-`uname -m`}
 TOP_KDIR=`pwd`
 TOP_MDIR=${TOP_KDIR}/media
 TOP_RDIR=${TOP_KDIR}/release
-CUR_KDIR=${TOP_KDIR}/linux-${KVER}-${ARCH}
 CUR_MDIR=${TOP_MDIR}/${KVER}
 CUR_RDIR=${TOP_RDIR}/${KVER}/${ARCH}
 
 #test -d ${CUR_KDIR} && sudo rm -rf ${CUR_KDIR}
 exp_vars
 check_mdir
+check_kdir
 echo "To build ${CUR_MDIR} for ${ARCH}"
 echo " against ${CUR_KDIR} ..."
 [ ! -d ${CUR_KDIR} ] && echo "Missing kernel directory ${CUR_KDIR}" && exit
