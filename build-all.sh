@@ -43,14 +43,16 @@ parse_param() {
 
 	test -z "${QTS}" -o ! -f "${SRC_REPO}/${QTS}" && echo "Missing QTS file ..." && usage
 	local filename=`basename ${QTS}`
-	SRC_DIR=${HOME}/${filename%.*}
+	local subdir=${filename%.*}
+	SRC_DIR=${HOME}/${subdir}
 
 	#untar in home dir
 	test -z "${TEST}" && {
 		#remove QTS if present
 		test -d ${SRC_DIR} && rm -rf ${SRC_DIR}
+		mkdir -p ${SRC_DIR}
 		cd && echo Extracting ${SRC_REPO}/${QTS} ...
-		tar xf ${SRC_REPO}/${QTS}
+		tar xf ${SRC_REPO}/${QTS} -C ${SRC_DIR} --strip-components=1
 	}
 }
 
@@ -87,7 +89,7 @@ do_build() {
 			pushd ${SRC_DIR}/Model/${model} >/dev/null
 			TOP_KDIR=${SRC_DIR}/Kernel
 			#build if log not present and not in test
-			test ! -f ${log} -a -z ${TEST} && make OPENSSL_VER=1.0 FACTORY_MODEL=no > ${log} 2>&1
+			test ! -f ${log} -a -z "${TEST}" && make OPENSSL_VER=1.0 FACTORY_MODEL=no > ${log} 2>&1
 			#KDIR is, for example, "linux-3.12.6"
 			local kstr=`grep Kernel ${log}| grep -m1 linux`
 			if [ -z "${kstr}" ]; then
