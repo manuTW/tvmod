@@ -20,15 +20,19 @@ usage() {
 
 
 #
-# Update global variables
-# Output : FILENAME
-#
+# 1. Set global variables according argument. 
+# 2. Unter QTS compress file to $HOME
+# In  : SSRC_REPO
+# Out : $SRC_DIR - root of QTS
+#       $ARCH - architecture, arm or x86_64
+#       $TEST - null means not testing
 #
 parse_param() {
+	local qts
 	#parse option
         while getopts "q:a:t" opt; do
                 case $opt in
-                q) QTS=$OPTARG;;
+                q) qts=$OPTARG;;
 		a)
 			case ${OPTARG} in
 			arm|x86_64) ARCH=${OPTARG};;
@@ -41,8 +45,8 @@ parse_param() {
         done
         OPTIND=1
 
-	test -z "${QTS}" -o ! -f "${SRC_REPO}/${QTS}" && echo "Missing QTS file ..." && usage
-	local filename=`basename ${QTS}`
+	test -z "${qts}" -o ! -f "${SRC_REPO}/${qts}" && echo "Missing QTS file ..." && usage
+	local filename=`basename ${qts}`
 	local subdir=${filename%.*}
 	SRC_DIR=${HOME}/${subdir}
 
@@ -51,15 +55,15 @@ parse_param() {
 		#remove QTS if present
 		test -d ${SRC_DIR} && rm -rf ${SRC_DIR}
 		mkdir -p ${SRC_DIR}
-		cd && echo Extracting ${SRC_REPO}/${QTS} ...
-		tar xf ${SRC_REPO}/${QTS} -C ${SRC_DIR} --strip-components=1
+		cd && echo Extracting ${SRC_REPO}/${qts} ...
+		tar xf ${SRC_REPO}/${qts} -C ${SRC_DIR} --strip-components=1
 	}
 }
 
 
 #
 # Given input string containing file path of " xxxx/linux-abc/yyyy"
-# Output linux-abc
+# Ret : string "linux-a.b.c" as it in Kernel of QTS tree
 # $1 - intput string
 extract_linux() {
 	for elm in $1; do
@@ -73,11 +77,14 @@ extract_linux() {
 			done
 		fi
 	done
-	KDIR=
 }
 
 
-#SRC_DIR
+#
+# Build media driver for each model described in MODEL_$ARCH 
+# In  : $SRC_DIR - root QTS directory
+#       $ARCH and $MODEL_$ARCH - architecture and model to build
+#
 do_build() {
 	local log=buildlog
 	eval mlist=\$MODEL_${ARCH}
@@ -87,22 +94,22 @@ do_build() {
 		if [ -d ${SRC_DIR}/Model/${model} ]; then
 			echo to build ${SRC_DIR}/Model/${model}
 			pushd ${SRC_DIR}/Model/${model} >/dev/null
-			TOP_KDIR=${SRC_DIR}/Kernel
+			local top_kdir=${SRC_DIR}/Kernel
 			#build if log not present and not in test
 			test ! -f ${log} -a -z "${TEST}" && make OPENSSL_VER=1.0 FACTORY_MODEL=no > ${log} 2>&1
-			#KDIR is, for example, "linux-3.12.6"
+			#kdir is, for example, "linux-3.12.6"
 			local kstr=`grep Kernel ${log}| grep -m1 linux`
 			if [ -z "${kstr}" ]; then
 				echo "Find no kernel version in log ..."
 			else
-				KDIR=`extract_linux "${kstr}"`
-				if [ -f ${TOP_KDIR}/${KDIR}/Module.symvers ]; then
+				local kdir=`extract_linux "${kstr}"`
+				if [ -f ${top_kdir}/${kdir}/Module.symvers ]; then
 					echo start building
 					pushd ${SHELL_DIR} >/dev/null
-					./build-one.sh -v ${KDIR#linux-} -a ${ARCH} -d ${TOP_KDIR}/${KDIR}
+					./build-one.sh -v ${kdir#linux-} -a ${ARCH} -d ${top_kdir}/${kdir}
 					popd >/dev/null
 				else
-					echo "${TOP_KDIR}/${KDIR} might not be fully built"
+					echo "${top_kdir}/${kdir} might not be fully built"
 				fi
 			fi
 			popd >/dev/null
