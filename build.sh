@@ -27,7 +27,7 @@ parse_param() {
 	TOP_RDIR=${TOP_KDIR}/release
 
 	#parse option
-	while getopts ":v:a:d" opt; do
+	while getopts "v:a:d:" opt; do
 		case $opt in
 		v) KVER=$OPTARG;;
 		a) arch=$OPTARG;;
@@ -116,7 +116,7 @@ check_kdir() {
 	fi
 }
 
-parse_param
+parse_param $@
 check_kdir
 #compile
 ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} make -C ${CUR_KDIR} M=${CUR_MDIR} clean
