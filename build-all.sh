@@ -89,7 +89,7 @@ do_build() {
 	local log=buildlog
 	eval mlist=\$MODEL_${ARCH}
 	for model in $mlist; do
-		echo $model
+		test -n "${TEST}" && echo $model
 		#build all (kernel first)
 		if [ -d ${SRC_DIR}/Model/${model} ]; then
 			echo to build ${SRC_DIR}/Model/${model}
