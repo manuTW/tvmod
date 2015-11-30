@@ -1,9 +1,81 @@
 #!/bin/bash
 
-#$1 ver
-#$2 arch
-#    x86_64
-#    arm
+#
+# build media driver against CUR_KDIR, if not present, use linux-${KVER}-${ARCH} instead
+# Usage:
+#   build.sh -v KVER [-a ARCH] [-d CUR_KDIR]
+#
+usage() {
+	echo "Usage: $0 -v KVER [-a ARCH] [-d CUR_KDIR]"
+	echo "    KVER: kernel version, say, 3.19 or 3.12.6"
+	echo "    ARCH: arm, x86_64, ... current kernel as the default"
+	echo "    CUR_KDIR: configured kernel tree to build against"
+	exit
+}
+
+
+#
+# Update global variables
+# Output : TOP_KDIR, TOP_MDIR, TOP_RDIR
+#          KVER, KVER2, ARCH, CUR_KDIR
+#
+parse_param() {
+	local arch
+
+	TOP_KDIR=`pwd`
+	TOP_MDIR=${TOP_KDIR}/media
+	TOP_RDIR=${TOP_KDIR}/release
+
+	#parse option
+	while getopts ":v:a:d" opt; do
+		case $opt in
+		v) KVER=$OPTARG;;
+		a) arch=$OPTARG;;
+		d) CUR_KDIR=$OPTARG;;
+		*) usage;;
+		esac
+	done
+	OPTIND=1
+
+	#extract version
+	test -z "${KVER}" && usage
+	#ver with first two number
+	KVER2=`echo ${KVER}| cut -f1,2 -d"."`
+
+	#determine media directory, can be slightly different from kver
+	CUR_MDIR=${TOP_MDIR}/${KVER}
+	test ! -d ${CUR_MDIR} && {
+		#if a.b.c is not present, try a.b instead
+		if test -d ${TOP_MDIR}/${KVER2}; then
+			CUR_MDIR=${TOP_MDIR}/${KVER2}
+		else
+			echo "Missing media directory for ${KVER}"
+			exit
+		fi
+	}
+
+	#architecture and release directory
+	ARCH=${arch:-`uname -m`}
+	export ARCH
+	[ ${ARCH} = arm ] && {
+		export PATH=/opt/cross-project/arm/linaro/bin:$PATH
+		export CROSS_COMPILE=arm-linux-gnueabihf-
+	}
+	CUR_RDIR=${TOP_RDIR}/${KVER}/${ARCH}
+
+	#determine kernel dir
+	if [ -n "${CUR_KDIR}" ]; then
+		test ! -d ${CUR_KDIR} && echo "${CUR_KDIR} doesn't exist" && exit
+	elif [ -d ${TOP_KDIR}/linux-${KVER}-${ARCH} ]; then
+		CUR_KDIR=${TOP_KDIR}/linux-${KVER}-${ARCH}
+	elif [ -d ${TOP_KDIR}/linux-${KVER2}-${ARCH} ]; then
+		CUR_KDIR=${TOP_KDIR}/linux-${KVER2}-${ARCH}
+	else
+		usage
+	fi
+	echo "To build media driver against ${CUR_KDIR}"
+}
+
 
 # modules to copy
 MOD_LIST="fc0012.ko fc0013.ko fc2580.ko dvb-usb-rtl28xxu.ko rtl2832.ko af9013.ko dvb-core.ko dvb_usb_v2.ko qt1010.ko af9033.ko dvb-pll.ko fc0011.ko rtl2830.ko dib0070.ko dvb-usb-af9015.ko s5h1411.ko dib0090.ko dvb-usb-af9035.ko it913x-fe.ko tda18218.ko dib3000mc.ko dvb-usb-dib0700.ko lgdt3305.ko tda18271.ko dib7000m.ko dvb-usb-dtt200u.ko mc44s803.ko tua9001.ko dib7000p.ko dvb-usb-it913x.ko mt2060.ko tuner-xc2028.ko dib8000.ko mt2266.ko xc4000.ko dib9000.ko mxl5005s.ko xc5000.ko dibx000_common.ko dvb-usb.ko mxl5007t.ko rc-core.ko"
@@ -27,56 +99,12 @@ copy_mod() {
 
 
 #
-#determine media directory
-#
-# In : $TOP_MDIR - directory "media" should present at top directory
-#      $CUR_MDIR - directory $KERV should present as subdir of "media",
-#		use a.b if a.b.c is not present
-# Out: KVER2 - first two number of kernel version
-check_mdir() {
-	#ver with first two number
-	KVER2=`echo ${KVER}| cut -f1,2 -d"."`
-
-	test ! -d ${TOP_MDIR} && echo Missing ${TOP_MDIR} ...stop build && exit
-	#if a.b.c is not present, try a.b instead
-	test ! -d ${CUR_MDIR} && {
-		if test -d ${TOP_MDIR}/${KVER2}; then
-			CUR_MDIR=${TOP_MDIR}/${KVER2}
-		else
-			echo "Missing media directory for ${KVER}"
-			exit
-		fi
-	}
-}
-
-
-#
-# export ARCH, PATH and CROSS_COMPILE if there is special settings
-#
-exp_vars() {
-	export ARCH
-	[ ${ARCH} = arm ] && {
-		export PATH=/opt/cross-project/arm/linaro/bin:$PATH
-		export CROSS_COMPILE=arm-linux-gnueabihf-
-	}
-}
-
-
-#
-# determine kernel dir to work with
-# precedence
-#  - TOP_KDIR
-#  - Kernel of build system
+# make sure the configured kernel is media driver ready
 # In : $TOP_KDIR
-#      $KVER/$KVER2
-#      $ARCH
+#      $KVER2
 #      $CUR_KDIR
 #      
 check_kdir() {
-	CUR_KDIR=${TOP_KDIR}/linux-${KVER}-${ARCH}
-	if [ ! -d ${CUR_KDIR} ]; then
-		if [ -d Kernel ];then CUR_KDIR=Kernel ; fi
-	fi
 	test ! -f ${CUR_KDIR}/.config && echo "Kernel ${CUR_KDIR} is not configured !" && exit
 	#make sure the kernel is media config enabled and make again
 	if [ ! -f ${CUR_KDIR}/.add_media ]; then
@@ -88,24 +116,9 @@ check_kdir() {
 	fi
 }
 
-KVER=$1
-ARCH=${2:-`uname -m`}
-[ -z "${KVER}" ] && echo Please specify the kernel version && exit
-
-
-TOP_KDIR=`pwd`
-TOP_MDIR=${TOP_KDIR}/media
-TOP_RDIR=${TOP_KDIR}/release
-CUR_MDIR=${TOP_MDIR}/${KVER}
-CUR_RDIR=${TOP_RDIR}/${KVER}/${ARCH}
-
-#test -d ${CUR_KDIR} && sudo rm -rf ${CUR_KDIR}
-exp_vars
-check_mdir
+parse_param
 check_kdir
-echo "To build ${CUR_MDIR} for ${ARCH}"
-echo " against ${CUR_KDIR} ..."
-[ ! -d ${CUR_KDIR} ] && echo "Missing kernel directory ${CUR_KDIR}" && exit
+#compile
 ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} make -C ${CUR_KDIR} M=${CUR_MDIR} clean
 ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} make -C ${CUR_KDIR} M=${CUR_MDIR}
 copy_mod ${CUR_MDIR} ${CUR_RDIR}
