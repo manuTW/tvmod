@@ -1,5 +1,7 @@
 #!/bin/bash
 
+TOP_KDIR=`pwd`
+
 #
 # build media driver against CUR_KDIR, if not present, use linux-${KVER}-${ARCH} instead
 # Usage:
@@ -16,13 +18,13 @@ usage() {
 
 #
 # Update global variables
-# Output : TOP_KDIR, TOP_MDIR, TOP_RDIR
-#          KVER, KVER2, ARCH, CUR_KDIR
+# In  : TOP_KDIR
+# Out : TOP_MDIR, TOP_RDIR
+#          KVER, KVER2, ARCH, CUR_KDIR, CUR_MDIR
 #
 parse_param() {
 	local arch
 
-	TOP_KDIR=`pwd`
 	TOP_MDIR=${TOP_KDIR}/media
 	TOP_RDIR=${TOP_KDIR}/release
 
