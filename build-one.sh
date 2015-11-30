@@ -111,7 +111,7 @@ check_kdir() {
 		cat ${TOP_KDIR}/modify/modify-${KVER2}.cfg >> ${CUR_KDIR}/.config
 		touch ${CUR_KDIR}/.add_media
 		pushd ${CUR_KDIR} >/dev/null
-		make
+		make >/tmp/log 2>&1
 		popd >/dev/null
 	fi
 }
