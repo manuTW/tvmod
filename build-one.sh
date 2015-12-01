@@ -3,6 +3,7 @@
 TOP_KDIR=`pwd`
 
 #
+# expect to build in directory tvmod
 # build media driver against CUR_KDIR, if not present, use linux-${KVER}-${ARCH} instead
 # Usage:
 #   build.sh -v KVER [-a ARCH] [-d CUR_KDIR]
@@ -110,24 +111,28 @@ copy_mod() {
 #      $KVER2
 #      $CUR_KDIR
 #      $ARCH
+#      $LOG
 #      
 check_kdir() {
 	test ! -f ${CUR_KDIR}/.config && echo "Kernel ${CUR_KDIR} is not configured !" && exit
 	#make sure the kernel is media config enabled and make again
-	if [ ! -f ${CUR_KDIR}/.add_media -o "`cat ${CUR_KDIR}/.add_media`" != ${ARCH} ]; then
+	local prevArch=`cat ${CUR_KDIR}/.add_media 2>/dev/null`
+
+	test "${prevArch}" != ${ARCH} && {
 		cat ${TOP_KDIR}/modify/modify-${KVER2}.cfg >> ${CUR_KDIR}/.config
 		echo ${ARCH} >${CUR_KDIR}/.add_media
 		pushd ${CUR_KDIR} >/dev/null
-		make 1>>/tmp/log
+		make 1>>${LOG}
 		popd >/dev/null
-	fi
+	}
 }
 
 parse_param $@
->/tmp/log
+LOG=`pwd`/${KVER}-${ARCH}.log
+>${LOG}
 check_kdir
 #compile
 ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} make -C ${CUR_KDIR} M=${CUR_MDIR} clean
-ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} make -C ${CUR_KDIR} M=${CUR_MDIR} 1>>/tmp/log
+ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} make -C ${CUR_KDIR} M=${CUR_MDIR} 1>>${LOG}
 copy_mod ${CUR_MDIR} ${CUR_RDIR}
 

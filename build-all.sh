@@ -1,9 +1,9 @@
 #!/bin/bash
 
 SHELL_DIR=`dirname $0`
+[ ${SHELL_DIR} = "." ] && SHELL_DIR=`pwd`
 #models to build
-#MODEL_x86_64="TS-X71 TS-X53II"
-MODEL_x86_64="TS-X71"
+MODEL_x86_64="TS-X71 TS-X53II"
 MODEL_arm="TS-X31P"
 
 #QTS source
@@ -53,7 +53,7 @@ parse_param() {
 
 	#untar in home dir
 	#take care if root QTS present
-	test -d ${SRC_DIR} && {
+	test ! -d ${SRC_DIR} && {
 		if [ -n "${TEST}" ]; then
 			#ask if in testing
 			echo -n "Whether to delete existing ${SRC_DIR} ? (N/y) "
