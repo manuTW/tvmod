@@ -4,6 +4,7 @@ SHELL_DIR=`dirname $0`
 [ ${SHELL_DIR} = "." ] && SHELL_DIR=`pwd`
 #models to build
 MODEL_x86_64="TS-X71 TS-X53II"
+#MODEL_x86_64="TS-X71"
 MODEL_arm="TS-X31P"
 
 #QTS source

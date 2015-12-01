@@ -116,15 +116,16 @@ copy_mod() {
 check_kdir() {
 	test ! -f ${CUR_KDIR}/.config && echo "Kernel ${CUR_KDIR} is not configured !" && exit
 	#make sure the kernel is media config enabled and make again
-	local prevArch=`cat ${CUR_KDIR}/.add_media 2>/dev/null`
+#	local prevArch=`cat ${CUR_KDIR}/.add_media 2>/dev/null`
 
-	test "${prevArch}" != ${ARCH} && {
+#	test "${prevArch}" != ${ARCH} && {
+		echo "merging ${TOP_KDIR}/modify/modify-${KVER2}.cfg into ${CUR_KDIR}/.config"
 		cat ${TOP_KDIR}/modify/modify-${KVER2}.cfg >> ${CUR_KDIR}/.config
-		echo ${ARCH} >${CUR_KDIR}/.add_media
-		pushd ${CUR_KDIR} >/dev/null
-		make 1>>${LOG}
-		popd >/dev/null
-	}
+#		echo ${ARCH} >${CUR_KDIR}/.add_media
+#		pushd ${CUR_KDIR} >/dev/null
+#		make 1>>${LOG}
+#		popd >/dev/null
+#	}
 }
 
 parse_param $@
