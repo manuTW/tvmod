@@ -87,11 +87,14 @@ MOD_LIST="fc0012.ko fc0013.ko fc2580.ko dvb-usb-rtl28xxu.ko rtl2832.ko af9013.ko
 copy_mod() {
 	SRC_DIR=$1
 	DST_DIR=$2
+#	local vermagic=`modinfo ${SRC_DIR}/dvb-core/dvb-core.ko | grep vermagic| cut -d":" -f2`
 
 	test -z "${SRC_DIR}" -o ! -d ${SRC_DIR} && echo Wrong source directory && exit 1
 	test -z "${DST_DIR}" && echo Wrong destination directory && exit 1
+	test -z "${vermagic}" && echo Build might fail for missing dvb-core.ko && exit 1
 	mkdir -p ${DST_DIR} &&\
 		test ! -d ${DST_DIR} && echo Fail to create destination directory && exit 1
+	echo "Copy modules to ${DST_DIR}"
 
 	for mm in ${MOD_LIST}; do
 		find ${SRC_DIR} \-name "${mm}" \-exec cp {} ${DST_DIR} \;
@@ -102,6 +105,7 @@ copy_mod() {
 
 #
 # make sure the configured kernel is media driver ready
+# the .add_media contains architecture it was built
 # In : $TOP_KDIR
 #      $KVER2
 #      $CUR_KDIR
@@ -112,7 +116,7 @@ check_kdir() {
 	#make sure the kernel is media config enabled and make again
 	if [ ! -f ${CUR_KDIR}/.add_media -o "`cat ${CUR_KDIR}/.add_media`" != ${ARCH} ]; then
 		cat ${TOP_KDIR}/modify/modify-${KVER2}.cfg >> ${CUR_KDIR}/.config
-		cat ${ARCH} >${CUR_KDIR}/.add_media
+		echo ${ARCH} >${CUR_KDIR}/.add_media
 		pushd ${CUR_KDIR} >/dev/null
 		make 1>>/tmp/log
 		popd >/dev/null

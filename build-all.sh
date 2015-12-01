@@ -1,8 +1,9 @@
 #!/bin/bash
 
-SHELL_DIR=`pwd`
+SHELL_DIR=`dirname $0`
 #models to build
-MODEL_x86_64="TS-X71 TS-X53II"
+#MODEL_x86_64="TS-X71 TS-X53II"
+MODEL_x86_64="TS-X71"
 MODEL_arm="TS-X31P"
 
 #QTS source
@@ -51,10 +52,24 @@ parse_param() {
 	SRC_DIR=${HOME}/${subdir}
 
 	#untar in home dir
-	test -z "${TEST}" && {
-		#remove QTS if present
-		test -d ${SRC_DIR} && rm -rf ${SRC_DIR}
-		mkdir -p ${SRC_DIR}
+	#take care if root QTS present
+	test -d ${SRC_DIR} && {
+		if [ -n "${TEST}" ]; then
+			#ask if in testing
+			echo -n "Whether to delete existing ${SRC_DIR} ? (N/y) "
+			read ans
+			case $ans in
+			Y|y) rm -rf ${SRC_DIR};;
+			esac
+		else
+			#remove if not testing
+			rm -rf ${SRC_DIR}
+		fi
+	}
+
+	#create if not present
+	test ! -d ${SRC_DIR} && mkdir -p ${SRC_DIR}
+	test ! -d ${SRC_DIR}/Model && {
 		cd && echo Extracting ${SRC_REPO}/${qts} ...
 		tar xf ${SRC_REPO}/${qts} -C ${SRC_DIR} --strip-components=1
 	}
@@ -86,6 +101,7 @@ extract_linux() {
 #       $ARCH and $MODEL_$ARCH - architecture and model to build
 #
 do_build() {
+	#original log for version extraction
 	local log=buildlog
 	eval mlist=\$MODEL_${ARCH}
 	for model in $mlist; do
@@ -96,7 +112,19 @@ do_build() {
 			pushd ${SRC_DIR}/Model/${model} >/dev/null
 			local top_kdir=${SRC_DIR}/Kernel
 			#build if log not present and not in test
-			test ! -f ${log} -a -z "${TEST}" && make OPENSSL_VER=1.0 FACTORY_MODEL=no > ${log} 2>&1
+			test ! -f ${log} && {
+				local toBuild=1
+				[ -n "${TEST}" ] && {
+					echo -n "original model is not built, do it now ? (Y/n) "
+					read ans
+					case $ans in
+					n|N) toBuild=
+						;;
+					esac
+				}
+				test -n "${toBuild}" && \
+					make OPENSSL_VER=1.0 FACTORY_MODEL=no > ${log} 2>&1
+			}
 			#kdir is, for example, "linux-3.12.6"
 			local kstr=`grep Kernel ${log}| grep -m1 linux`
 			if [ -z "${kstr}" ]; then
@@ -106,7 +134,8 @@ do_build() {
 				if [ -f ${top_kdir}/${kdir}/Module.symvers ]; then
 					test -n "${TEST}" && echo start building
 					pushd ${SHELL_DIR} >/dev/null
-					./build-one.sh -v ${kdir#linux-} -a ${ARCH} -d ${top_kdir}/${kdir}
+					./build-one.sh -v ${kdir#linux-} -a \
+						${ARCH} -d ${top_kdir}/${kdir}
 					popd >/dev/null
 				else
 					echo "${top_kdir}/${kdir} might not be fully built"
