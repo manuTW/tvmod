@@ -104,7 +104,7 @@ do_build() {
 			else
 				local kdir=`extract_linux "${kstr}"`
 				if [ -f ${top_kdir}/${kdir}/Module.symvers ]; then
-					echo start building
+					test -n "${TEST}" && echo start building
 					pushd ${SHELL_DIR} >/dev/null
 					./build-one.sh -v ${kdir#linux-} -a ${ARCH} -d ${top_kdir}/${kdir}
 					popd >/dev/null

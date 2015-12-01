@@ -105,23 +105,25 @@ copy_mod() {
 # In : $TOP_KDIR
 #      $KVER2
 #      $CUR_KDIR
+#      $ARCH
 #      
 check_kdir() {
 	test ! -f ${CUR_KDIR}/.config && echo "Kernel ${CUR_KDIR} is not configured !" && exit
 	#make sure the kernel is media config enabled and make again
-	if [ ! -f ${CUR_KDIR}/.add_media ]; then
+	if [ ! -f ${CUR_KDIR}/.add_media -o "`cat ${CUR_KDIR}/.add_media`" != ${ARCH} ]; then
 		cat ${TOP_KDIR}/modify/modify-${KVER2}.cfg >> ${CUR_KDIR}/.config
-		touch ${CUR_KDIR}/.add_media
+		cat ${ARCH} >${CUR_KDIR}/.add_media
 		pushd ${CUR_KDIR} >/dev/null
-		make >/tmp/log 2>&1
+		make 1>>/tmp/log
 		popd >/dev/null
 	fi
 }
 
 parse_param $@
+>/tmp/log
 check_kdir
 #compile
 ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} make -C ${CUR_KDIR} M=${CUR_MDIR} clean
-ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} make -C ${CUR_KDIR} M=${CUR_MDIR}
+ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} make -C ${CUR_KDIR} M=${CUR_MDIR} 1>>/tmp/log
 copy_mod ${CUR_MDIR} ${CUR_RDIR}
 
