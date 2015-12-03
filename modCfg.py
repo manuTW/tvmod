@@ -118,6 +118,14 @@ if g_arg.infoOnly:
 	for ln in g_cfg.getDVB(): print ln
 elif g_ver != "": 
 	os.system('cp ' + g_arg.cfgOrg + ' ' + g_arg.cfgOut)
+	mypath=g_shellPath+'modify/modify-'+g_ver+'.cfg'
+	#print 'trying a.b.c ' + mypath
+	if not os.path.exists(mypath):
+		mypath=g_shellPath+'/modify/modify-'+re.sub(r'\.\d+$', '', g_ver)+'.cfg'
+		#print 'trying a.b ' + mypath
+		if not os.path.exists(mypath): sys.exit(1)
+	print 'applying ' + mypath
+	os.system('cat ' + mypath + ' >>' + g_arg.cfgOut)
 	with open(g_arg.cfgOut, "a") as fout:
 		fout.writelines("%s\n" %ln for ln in g_cfg.getRC())
 		fout.writelines("%s\n" %ln for ln in g_cfg.getDVB())
