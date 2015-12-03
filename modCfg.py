@@ -1,12 +1,18 @@
 import argparse
 import sys
+import os
 import re
 
 def usage(reason):
 	if None != reason: print reason
-	print 'Usage: modCfg -s cfgOrg -c cfgExt [-o cfgOut]'
-	print '   cfgOrg: original configuration file'
-	print '   cfgExt: extra configuration file'
+	print '  Usage: modCfg [-i] -s cfgOrg [-o cfgOut]'
+	print '    if version of cfgOrg parsed, corresponding modify-ver is applied and output'
+	print '    -i: information only'
+	print '    cfgOrg: original configuration file'
+	print '    cfgExt: extra configuration file. If not present, information of original'
+	print '            is displayed. Otherwise, a merged configuration generated'
+	print '    cfgOut: output configuration if cfgExt present. default to .config'
+	print '  Ret: 0 success and 1 failure'
 
 # parse kernel configuration and create database
 class cKconfig(object):
@@ -14,8 +20,11 @@ class cKconfig(object):
 				'CONFIG_DVB_DYNAMIC_MINORS=y')
 	RC_CORE_SETTING=('CONFIG_MEDIA_RC_SUPPORT=y', 'CONFIG_RC_CORE=m')
 
-	#Ret: None - if one of the MATCH_STR doesn't appear
-	#   otherwise - return version a.b.c
+	# Check if a.b.c (or a.b), linux, kernel, and configuration present
+	# extract a.b.c (or a.b) as version string
+	# In : line - input string
+	# Ret: None - if fail to match
+	#   otherwise - return version a.b.c (or a.b)
 	def findVersion(self, line):
 		if self._version == "":
 			matchCount=0
@@ -55,6 +64,7 @@ class cKconfig(object):
 		except:
 			print "Unexpected error:", sys.exc_info()[0]
 			sys.exit(1)
+		fcfg.close()
 
 	#Ret : version string parsed
 	#      otherwise - ""
@@ -84,8 +94,7 @@ def check_param():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-s', action='store', dest='cfgOrg',
 			help='Original configuration file')
-	parser.add_argument('-c', action='store', dest='cfgExt',
-			help='Extra configuration to merge')
+	parser.add_argument('-i', action='store_true', default=False, dest='infoOnly')
 	parser.add_argument('-o', action='store', dest='cfgOut',
 			default=".config",
 			help='Output configuration')
@@ -95,35 +104,26 @@ def check_param():
 		usage("Missing original configuration file")
 		sys.exit(1)
 
-	if None == arg.cfgExt:
-		usage("Missing new configuration file")
-		sys.exit(1)
 	return arg
 
 
-arg=check_param()
-cfg=cKconfig(arg.cfgOrg)
+g_arg=check_param()
+g_cfg=cKconfig(g_arg.cfgOrg)
+g_shellPath=os.path.dirname(os.path.abspath(__file__))
+g_ver=g_cfg.getVersion()
 
-if __name__ == '__main__':
-	print "Kernel Version: " + cfg.getVersion()
-	for i in cfg.getRC(): print i
-	for i in cfg.getDVB(): print i
+if g_arg.infoOnly:
+	print "Kernel Version: " + g_ver
+	for ln in g_cfg.getRC(): print ln
+	for ln in g_cfg.getDVB(): print ln
+elif g_ver != "": 
+	os.system('cp ' + g_arg.cfgOrg + ' ' + g_arg.cfgOut)
+	with open(g_arg.cfgOut, "a") as fout:
+		fout.writelines("%s\n" %ln for ln in g_cfg.getRC())
+		fout.writelines("%s\n" %ln for ln in g_cfg.getDVB())
+		fout.writelines("\n")
 else:
-	'''
-	try:
-		fout = open(arg.cfgOut, "w")
-		forg = open(arg.cfgOrg, "r")
-		fext = open(arg.cfgExt, "r")
-		for line in forg:
-			fout.write(line)
-		for line in fext:
-			fout.write(line)
-	except IOError as e:
-		print "I/O error({0}): {1}".format(e.errno, e.strerror)
-	except:
-		print "Unexpected error:", sys.exc_info()[0]
-		sys.exit(1)
-	'''
+	sys.exit(1)
 
 sys.exit(0)
 
