@@ -6,12 +6,13 @@ TOP_KDIR=`pwd`
 # expect to build in directory tvmod
 # build media driver against CUR_KDIR, if not present, use linux-${KVER}-${ARCH} instead
 # Usage:
-#   build.sh -v KVER [-a ARCH] [-d CUR_KDIR]
+#   build.sh -v KVER -m MODEL_PATH[-a ARCH] [-d CUR_KDIR]
 #
 usage() {
-	echo "Usage: $0 -v KVER [-a ARCH] [-d CUR_KDIR]"
+	echo "Usage: $0 -v KVER -m MODEL [-a ARCH] [-d CUR_KDIR]"
 	echo "    KVER: kernel version, say, 3.19 or 3.12.6"
 	echo "    ARCH: arm, x86_64, ... current kernel as the default"
+	echo "    MODEL_PATH: full path of model to build"
 	echo "    CUR_KDIR: configured kernel tree to build against"
 	exit
 }
@@ -30,11 +31,12 @@ parse_param() {
 	TOP_RDIR=${TOP_KDIR}/release
 
 	#parse option
-	while getopts "v:a:d:" opt; do
+	while getopts "v:a:d:m:" opt; do
 		case $opt in
 		v) KVER=$OPTARG;;
 		a) arch=$OPTARG;;
 		d) CUR_KDIR=$OPTARG;;
+		m) M_PATH=$OPTARG;;
 		*) usage;;
 		esac
 	done
@@ -42,6 +44,7 @@ parse_param() {
 
 	#extract version
 	test -z "${KVER}" && usage
+	test -z "${M_PATH}" -o ! -d ${M_PATH} && usage
 	#ver with first two number
 	KVER2=`echo ${KVER}| cut -f1,2 -d"."`
 
@@ -92,7 +95,8 @@ copy_mod() {
 
 	test -z "${SRC_DIR}" -o ! -d ${SRC_DIR} && echo Wrong source directory && exit 1
 	test -z "${DST_DIR}" && echo Wrong destination directory && exit 1
-	test -z "${vermagic}" && echo Build might fail for missing dvb-core.ko && exit 1
+	test ! -f ${SRC_DIR}/dvb-core/dvb-core.ko &&\
+		echo Build might fail for missing dvb-core.ko && exit 1
 	mkdir -p ${DST_DIR} &&\
 		test ! -d ${DST_DIR} && echo Fail to create destination directory && exit 1
 	echo "Copy modules to ${DST_DIR}"
@@ -110,22 +114,24 @@ copy_mod() {
 # In : $TOP_KDIR
 #      $KVER2
 #      $CUR_KDIR
-#      $ARCH
 #      $LOG
 #      
 check_kdir() {
-	test ! -f ${CUR_KDIR}/.config && echo "Kernel ${CUR_KDIR} is not configured !" && exit
 	#make sure the kernel is media config enabled and make again
 #	local prevArch=`cat ${CUR_KDIR}/.add_media 2>/dev/null`
-
-#	test "${prevArch}" != ${ARCH} && {
-		echo "merging ${TOP_KDIR}/modify/modify-${KVER2}.cfg into ${CUR_KDIR}/.config"
-		cat ${TOP_KDIR}/modify/modify-${KVER2}.cfg >> ${CUR_KDIR}/.config
-#		echo ${ARCH} >${CUR_KDIR}/.add_media
-#		pushd ${CUR_KDIR} >/dev/null
-#		make 1>>${LOG}
-#		popd >/dev/null
-#	}
+	local theCfg=`ls ${M_PATH} |grep ${KVER}`
+	test -z "${theCfg}"&& echo "Find no config in ${M_PATH}" && exit
+	rm -f ${CUR_KDIR}/.config
+	#generate my version and then swap name
+	echo "Apply patch to ${M_PATH}/${theCfg}"
+	python modCfg.py -s ${M_PATH}/${theCfg} -o ${M_PATH}/mod.cfg
+	mv ${M_PATH}/${theCfg} ${M_PATH}/org.cfg
+	mv ${M_PATH}/mod.cfg ${M_PATH}/${theCfg}
+	pushd ${M_PATH} >/dev/null
+	make OPENSSL_VER=1.0 FACTORY_MODEL=no >${LOG} 2>&1
+	popd >/dev/null
+	#restore
+	mv ${M_PATH}/org.cfg ${M_PATH}/${theCfg}
 }
 
 parse_param $@
