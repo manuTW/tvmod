@@ -54,7 +54,7 @@ parse_param() {
 
 	#untar in home dir
 	#take care if root QTS present
-	test ! -d ${SRC_DIR} && {
+	test -d ${SRC_DIR} && {
 		if [ -n "${TEST}" ]; then
 			#ask if in testing
 			echo -n "Whether to delete existing ${SRC_DIR} ? (N/y) "
@@ -62,9 +62,6 @@ parse_param() {
 			case $ans in
 			Y|y) rm -rf ${SRC_DIR};;
 			esac
-		else
-			#remove if not testing
-			rm -rf ${SRC_DIR}
 		fi
 	}
 
