@@ -5,9 +5,10 @@ import re
 
 def usage(reason):
 	if None != reason: print reason
-	print '  Usage: modCfg [-i] -s cfgOrg [-o cfgOut]'
+	print '  Usage: modCfg [-i] [-v] -s cfgOrg [-o cfgOut]'
 	print '    if version of cfgOrg parsed, corresponding modify-ver is applied and output'
 	print '    -i: information only'
+	print '    -v: kernel version only'
 	print '    cfgOrg: original configuration file'
 	print '    cfgExt: extra configuration file. If not present, information of original'
 	print '            is displayed. Otherwise, a merged configuration generated'
@@ -95,6 +96,7 @@ def check_param():
 	parser.add_argument('-s', action='store', dest='cfgOrg',
 			help='Original configuration file')
 	parser.add_argument('-i', action='store_true', default=False, dest='infoOnly')
+	parser.add_argument('-v', action='store_true', default=False, dest='verOnly')
 	parser.add_argument('-o', action='store', dest='cfgOut',
 			default=".config",
 			help='Output configuration')
@@ -112,7 +114,9 @@ g_cfg=cKconfig(g_arg.cfgOrg)
 g_shellPath=os.path.dirname(os.path.abspath(__file__))
 g_ver=g_cfg.getVersion()
 
-if g_arg.infoOnly:
+if g_arg.verOnly:
+	print g_ver
+elif g_arg.infoOnly:
 	print "Kernel Version: " + g_ver
 	for ln in g_cfg.getRC(): print ln
 	for ln in g_cfg.getDVB(): print ln
