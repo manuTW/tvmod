@@ -5,15 +5,46 @@ import re
 
 def usage(reason):
 	if None != reason: print reason
-	print '  Usage: modCfg [-i] [-v] -s cfgOrg [-o cfgOut]'
+	print '  Usage: modCfg [-i] [-v] [-k] -s cfgOrg [-o cfgOut]'
 	print '    if version of cfgOrg parsed, corresponding modify-ver is applied and output'
 	print '    -i: information only'
-	print '    -v: kernel version only'
+	print '    -v: show kernel version only'
+	print '    -k: build kernel only, default off, the new makefile named .mk'
 	print '    cfgOrg: original configuration file'
 	print '    cfgExt: extra configuration file. If not present, information of original'
 	print '            is displayed. Otherwise, a merged configuration generated'
 	print '    cfgOut: output configuration if cfgExt present. default to .config'
 	print '  Ret: 0 success and 1 failure'
+
+# Remove command in between "all:" and the next "\n" to speed up make process
+# In : modelDir - directory of model which is expected to contain the makefile
+# Out: makefile.kernel generated
+def allToKernel(modelDir):
+	FILES=('/Makefile', '/makefile')
+	mkfile=None
+	for ff in FILES:
+		if os.path.isfile(modelDir+ff):
+			mkfile=modelDir+ff
+			break
+	if not mkfile:
+		print 'No make file found ...skip'
+		return
+	skip=False
+	kernelFound=False
+	with open(modelDir+'/.mk', "w") as wfd:
+		with open(modelDir+ff, "r") as rfd:
+			for line in rfd:
+				#determine to write or not
+				if not skip: wfd.writelines("%s" %line)
+				else:
+					if not line.strip(): #an empty line
+						skip=False
+						wfd.writelines("%s" %line)
+				#check if "make kernel" found
+				if not kernelFound:
+					if re.search(r'^make kernel', line.strip(), re.I):
+						skip=True
+						kernelFound=True
 
 # parse kernel configuration and create database
 class cKconfig(object):
@@ -36,11 +67,11 @@ class cKconfig(object):
 			searchObj = re.search('configuration', line, re.M|re.I)
 			if searchObj: matchCount += 1
 			if matchCount is 3:
-				matchObj=re.match(r'.*(\d+)\.(\d+)\.(\d+)', line)
+				matchObj=re.match(r'.*?(\d+)\.(\d+)\.(\d+)', line)
 				if matchObj:
 					return matchObj.group(1) + '.' + matchObj.group(2) +\
 						'.' + matchObj.group(3)
-				matchObj=re.match(r'.*(\d+)\.(\d+)', line)
+				matchObj=re.match(r'.*?(\d+)\.(\d+)', line)
 				if matchObj:
 					return matchObj.group(1) + '.' + matchObj.group(2)
 		return None
@@ -97,6 +128,7 @@ def check_param():
 			help='Original configuration file')
 	parser.add_argument('-i', action='store_true', default=False, dest='infoOnly')
 	parser.add_argument('-v', action='store_true', default=False, dest='verOnly')
+	parser.add_argument('-k', action='store_false', default=True, dest='buildToKern')
 	parser.add_argument('-o', action='store', dest='cfgOut',
 			default=".config",
 			help='Output configuration')

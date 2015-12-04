@@ -6,10 +6,10 @@ TOP_KDIR=`pwd`
 # expect to build in directory tvmod
 # build media driver against CUR_KDIR, if not present, use linux-${KVER}-${ARCH} instead
 # Usage:
-#   build.sh -v KVER -m MODEL_PATH[-a ARCH] [-d CUR_KDIR]
+#   build.sh -v KVER -m MODEL_PATH [-a ARCH] [-d CUR_KDIR]
 #
 usage() {
-	echo "Usage: $0 -v KVER -m MODEL [-a ARCH] [-d CUR_KDIR]"
+	echo "Usage: $0 -v KVER -m MODEL_PATH [-a ARCH] [-d CUR_KDIR]"
 	echo "    KVER: kernel version, say, 3.19 or 3.12.6"
 	echo "    ARCH: arm, x86_64, ... current kernel as the default"
 	echo "    MODEL_PATH: full path of model to build"
@@ -23,6 +23,7 @@ usage() {
 # In  : TOP_KDIR
 # Out : TOP_MDIR, TOP_RDIR
 #          KVER, KVER2, ARCH, CUR_KDIR, CUR_MDIR
+#       M_PATH: full model path to build
 #
 parse_param() {
 	local arch
@@ -124,11 +125,12 @@ check_kdir() {
 	rm -f ${CUR_KDIR}/.config
 	#generate my version and then swap name
 	echo "Apply patch to ${M_PATH}/${theCfg}"
-	python modCfg.py -s ${M_PATH}/${theCfg} -o ${M_PATH}/mod.cfg
+	#-k generates a modified makefile named .mk
+	python modCfg.py -k -s ${M_PATH}/${theCfg} -o ${M_PATH}/mod.cfg
 	mv ${M_PATH}/${theCfg} ${M_PATH}/org.cfg
 	mv ${M_PATH}/mod.cfg ${M_PATH}/${theCfg}
 	pushd ${M_PATH} >/dev/null
-	make OPENSSL_VER=1.0 FACTORY_MODEL=no >${LOG} 2>&1
+	make OPENSSL_VER=1.0 FACTORY_MODEL=no -f .mk >${LOG} 2>&1
 	popd >/dev/null
 	#restore
 	mv ${M_PATH}/org.cfg ${M_PATH}/${theCfg}
