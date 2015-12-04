@@ -1,0 +1,15 @@
+x86Build:
+  image: 172.17.23.195:5000/pure_builder
+  user: root
+  working_dir: /root/tvmod
+  privileged: true
+  net: "host"
+  volumes_from:
+    - ct_volume_container
+  volumes:
+    - "$HOME/working:/root"
+    - "/mnt/sourcetgz:/mnt/sourcetgz"
+    - "/mnt/pub:/mnt/pub"
+    - "/etc/localtime:/etc/localtime"
+    - "/etc/timezone:/etc/timezone"
+  command: ./build-all.sh -q NasX86.4.2.1.tgz -a x86_64
