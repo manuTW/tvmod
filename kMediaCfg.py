@@ -1,78 +1,43 @@
-import argparse
+from kConfig import * 
 import sys
 import re
 
-# parse a line
-# Ret : None - keep processing by cKconfig
-#      otherwise - cKconfig won't further process this line
-def dec_parser(func):
-	def inner(*args, **kwargs):
-		return func(*args, **kwargs)
-	return inner
-
 # parse kernel configuration and create database
-class cKconfig(object):
+class cMediaCfg(cKconfig):
+	DVB_CORE_SETTING=('CONFIG_DVB_CORE=m', 'CONFIG_DVB_MAX_ADAPTERS=8', \
+				'CONFIG_DVB_DYNAMIC_MINORS=y')
+	RC_CORE_SETTING=('CONFIG_MEDIA_RC_SUPPORT=y', 'CONFIG_RC_CORE=m')
+
 	@dec_parser
 	def _parser(self, line):
 		return None
-
-	# Check if a.b.c (or a.b), linux, kernel, and configuration present
-	# extract a.b.c (or a.b) as version string
-	# In : line - input string
-	# Out: _version - a.b.c (or a.b) updated if not set
-	def findVersion(self, line):
-		if not self._version:
-			matchCount=0
-			if re.search('linux', line, re.M|re.I): matchCount += 1
-			if re.search('kernel', line, re.M|re.I): matchCount += 1
-			if re.search('configuration', line, re.M|re.I): matchCount += 1
-			if matchCount is 3:
-				matchObj=re.match(r'.*?(\d+)\.(\d+)\.(\d+)', line)
-				if matchObj:
-					self._version=matchObj.group(1) + '.' + matchObj.group(2) +\
-						'.' + matchObj.group(3)
-					return
-				matchObj=re.match(r'.*?(\d+)\.(\d+)', line)
-				if matchObj:
-					self._version=matchObj.group(1) + '.' + matchObj.group(2)
 
 	# In : full path configuratin file
 	# Out: _arch - architecture string, 'x86_64', 'x86', or 'arm'
 	#      _version - version string 'a.b.c' or 'a.b'
 	def __init__(self, cfgName):
-		self._srcFileName=cfgName
-		self._version=None
-		self._arch=None
-		isX86=False
-		try:
-			fcfg=open(cfgName, "r")
-			for line in fcfg:
-				if not self._arch and re.search(r'CONFIG_X86_64=y', line, re.M|re.I):
-					self._arch='x86_64'
-					continue
-				if re.search(r'CONFIG_X86=y', line, re.M|re.I):
-					isX86=True
-					continue
-				if self._parser(line): continue					
-				self.findVersion(line)
-		except IOError as e:
-			print "I/O error({0}): {1}".format(e.errno, e.strerror)
-			sys.exit(1)
-		except:
-			print "Unexpected error:", sys.exc_info()[0]
-			sys.exit(1)
-		if not self._arch:
-			if isX86: self._arch='x86'
-			else: self._arch='arm'
-		fcfg.close()
+		super(cMediaCfg, self).__init__(cfgName)
 
 	#Ret : version and architecture string parsed
 	#      otherwise - ""
 	def getVerArch(self):
 		return self._version, self._arch
 
-	# Add configuration frome extraFile and then merge 
-	# def add(extraFile,outFile):
+	#Ret : None - no alter since it is 'y'
+	#      otherwise - tuple to write to configure file
+	def getDVB(self):
+		if self._dvb_coreEnable:
+			return ()
+		else:
+			return self.DVB_CORE_SETTING
+
+	#Ret : None - no alter since it is 'y'
+	#      otherwise - tuple to write to configure file
+	def getRC(self):
+		if self._rc_coreEnable:
+			return ()
+		else:
+			return self.RC_CORE_SETTING
 
 if __name__ == '__main__':
 	def usage(reason):
@@ -108,7 +73,7 @@ if __name__ == '__main__':
 		return arg
 	#main: demo the usage
 	arg=check_param()
-	cfg=cKconfig(arg.cfgOrg)
+	cfg=cMediaCfg(arg.cfgOrg)
 	ver, arch=cfg.getVerArch()
 	if arg.verOnly:	print ver
 	elif arg.archOnly: print arch
