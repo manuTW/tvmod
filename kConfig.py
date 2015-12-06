@@ -46,11 +46,14 @@ class cKconfig(object):
 		self._srcFileName=cfgName
 		self._version=None
 		self._arch=None
-		self._extra=[]
+		self._extra=[]                 #lines to append by subclass
+		self._rmList=[]                #lines to remove by subclass
 		isX86=False
 		try:
 			fcfg=open(cfgName, "r")
+			lineNr=0                #1-based
 			for line in fcfg:
+				lineNr+=1
 				if not self._arch and re.search(r'CONFIG_X86_64=y', line, re.M|re.I):
 					self._arch='x86_64'
 					continue
@@ -59,7 +62,7 @@ class cKconfig(object):
 					continue
 				action=self._parser(line)
 				if 'rm' == action:
-					#todo remember line to remove
+					self._rmList.append(lineNr)
 					continue
 				elif 'continue' == action: continue
 				self.findVersion(line)
@@ -73,15 +76,18 @@ class cKconfig(object):
 			if isX86: self._arch='x86'
 			else: self._arch='arm'
 		fcfg.close()
+		self._rmList.sort(reverse=True)     #so as to pop
 
 	#Ret : version and architecture string parsed
 	#      otherwise - ""
 	def getVerArch(self):
 		return self._version, self._arch
 
-
 	def getExtra(self):
 		return self._extra
+
+	def getRmList(self):
+		return self._rmList
 
 	# Add configuration frome extraFile and then merge 
 	# def add(extraFile,outFile):
@@ -107,9 +113,6 @@ if __name__ == '__main__':
 		parser.add_argument('-i', action='store_true', default=False, dest='infoOnly')
 		parser.add_argument('-v', action='store_true', default=False, dest='verOnly')
 		parser.add_argument('-a', action='store_true', default=False, dest='archOnly')
-		parser.add_argument('-o', action='store', dest='cfgOut',
-			default=".config",
-			help='Output configuration')
 		arg = parser.parse_args()
 		if not arg.cfgOrg:
 			usage("Missing original configuration file")
@@ -124,4 +127,7 @@ if __name__ == '__main__':
 	else:
 		print ver, arch
 		for ln in cfg.getExtra(): print ln
+		rmList=cfg.getRmList()
+		if len(rmList):
+			print 'Lines to remove: ' + rmList
 	sys.exit(0)
