@@ -10,18 +10,28 @@ class cMediaCfg(cKconfig):
 
 	@dec_parser
 	def _parser(self, line):
+		if re.search(r'CONFIG_DVB_CORE=y', line, re.I):
+			self._dvb_coreEnable=True
+			return 'continue'
+		if re.search(r'CONFIG_MEDIA_RC_SUPPORT=y', line, re.I):
+			self._rc_coreEnable=True
+			return 'continue'
 		return None
-
+		
 	# In : full path configuratin file
 	# Out: _arch - architecture string, 'x86_64', 'x86', or 'arm'
 	#      _version - version string 'a.b.c' or 'a.b'
 	def __init__(self, cfgName):
+		self._rc_coreEnable=False
+		self._dvb_coreEnable=False
 		super(cMediaCfg, self).__init__(cfgName)
-
-	#Ret : version and architecture string parsed
-	#      otherwise - ""
-	def getVerArch(self):
-		return self._version, self._arch
+		#append our extra lines
+		if not self._rc_coreEnable:
+			for item in self.RC_CORE_SETTING:
+				self._extra.append(item)
+		if not self._dvb_coreEnable:
+			for item in self.DVB_CORE_SETTING:
+				self._extra.append(item)
 
 	#Ret : None - no alter since it is 'y'
 	#      otherwise - tuple to write to configure file
@@ -77,5 +87,7 @@ if __name__ == '__main__':
 	ver, arch=cfg.getVerArch()
 	if arg.verOnly:	print ver
 	elif arg.archOnly: print arch
-	else: print ver, arch
+	else:
+		print ver, arch
+		for ln in cfg.getExtra(): print ln
 	sys.exit(0)

@@ -2,9 +2,7 @@ import argparse
 import sys
 import re
 
-# parse a line
-# Ret : None - keep processing by cKconfig
-#      otherwise - cKconfig won't further process this line
+# to call sub-class methods
 def dec_parser(func):
 	def inner(*args, **kwargs):
 		return func(*args, **kwargs)
@@ -12,6 +10,11 @@ def dec_parser(func):
 
 # parse kernel configuration and create database
 class cKconfig(object):
+	# parse a line, subclass implement its own parser here
+	# Out : _extra - line to append
+	# Ret : 'rm' : the line will be removed in output config
+	#       'continue' : stop processing this line since processed
+	#       otherwise : keep processing
 	@dec_parser
 	def _parser(self, line):
 		return None
@@ -43,6 +46,7 @@ class cKconfig(object):
 		self._srcFileName=cfgName
 		self._version=None
 		self._arch=None
+		self._extra=[]
 		isX86=False
 		try:
 			fcfg=open(cfgName, "r")
@@ -53,7 +57,11 @@ class cKconfig(object):
 				if re.search(r'CONFIG_X86=y', line, re.M|re.I):
 					isX86=True
 					continue
-				if self._parser(line): continue					
+				action=self._parser(line)
+				if 'rm' == action:
+					#todo remember line to remove
+					continue
+				elif 'continue' == action: continue
 				self.findVersion(line)
 		except IOError as e:
 			print "I/O error({0}): {1}".format(e.errno, e.strerror)
@@ -71,21 +79,22 @@ class cKconfig(object):
 	def getVerArch(self):
 		return self._version, self._arch
 
+
+	def getExtra(self):
+		return self._extra
+
 	# Add configuration frome extraFile and then merge 
 	# def add(extraFile,outFile):
 
 if __name__ == '__main__':
 	def usage(reason):
 		if reason: print reason
-		print '  Usage: modCfg [-v] [-a] -s cfgOrg [-o cfgOut]'
+		print '  Usage: modCfg [-v] [-a] -s cfgOrg'
 		print '    if version of cfgOrg parsed, corresponding modify-ver is applied and output'
 		print '    -i: show all information, no further operation'
 		print '    -v: show kernel version, no further operation'
 		print '    -a: show architecture, no further operation'
 		print '    cfgOrg: original configuration file'
-		print '    cfgExt: extra configuration file. If not present, information of original'
-		print '            is displayed. Otherwise, a merged configuration generated'
-		print '    cfgOut: output configuration if cfgExt present. default to .config'
 		print '  Ret: 0 success and 1 failure'
 	
 	# process parameters
@@ -112,5 +121,7 @@ if __name__ == '__main__':
 	ver, arch=cfg.getVerArch()
 	if arg.verOnly:	print ver
 	elif arg.archOnly: print arch
-	else: print ver, arch
+	else:
+		print ver, arch
+		for ln in cfg.getExtra(): print ln
 	sys.exit(0)
