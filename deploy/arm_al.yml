@@ -1,4 +1,4 @@
-x86Build:
+armBuild:
   image: 192.168.81.5:5000/builder
   user: root
   working_dir: /root/tvmod
