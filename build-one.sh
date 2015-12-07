@@ -119,7 +119,7 @@ copy_mod() {
 check_kdir() {
 	#make sure the kernel is media config enabled and make again
 	#generate .mk and 
-	local cfg=`python QTS.py -m ${M_PATH}`
+	local cfg=`python QTS.py -m ${M_PATH} -c`
 	#generate a modified config
 	python kMediaCfg.py -s ${cfg} -m ${TOP_KDIR}/modify/modify-${KVER2}.cfg\
 		-o ${M_PATH}/mod.cfg
