@@ -16,7 +16,7 @@ class cQTSmodel(object):
 	def _doMake(self, mkfile=None):
 		if not mkfile: mkfile=self._mkfile
 		os.system('rm -f '+self._blog)
-		os.system('cd '+self._path+'; make -f '+mkfile)
+		os.system('cd '+self._path+'; make -f '+mkfile+' >'+self._blog+' 2>&1')
 		if not os.path.isfile(self._blog):
 			print 'Build might fail (', self._path, ')'
 
