@@ -1,4 +1,5 @@
 import argparse
+import os
 import sys
 import re
 
@@ -89,17 +90,25 @@ class cKconfig(object):
 	def getRmList(self):
 		return self._rmList
 
-	# Add configuration frome extraFile and then merge 
-	# def add(extraFile,outFile):
+	# Add configuration frome an to-merge file and those _extra
+	def merge(self, toMerge,output):
+		#no remove for now
+		os.system('cp '+self._srcFileName+' '+output)
+		if toMerge:
+			os.system('cat '+toMerge+' >>'+output)
+		for ln in self._extra:
+			os.system('echo '+ln+' >>'+output)
 
 if __name__ == '__main__':
 	def usage(reason):
 		if reason: print reason
-		print '  Usage: modCfg [-v] [-a] -s cfgOrg'
+		print '  Usage: kConfig.py [-v] [-a] -s cfgOrg [-m cfgMerge] [-o cfgOut]'
 		print '    if version of cfgOrg parsed, corresponding modify-ver is applied and output'
 		print '    -i: show all information, no further operation'
 		print '    -v: show kernel version, no further operation'
 		print '    -a: show architecture, no further operation'
+		print '    -m: file to merge into original config to form the new config'
+		print '    -o: output file of the new config. When -m, cfg is the default output'
 		print '    cfgOrg: original configuration file'
 		print '  Ret: 0 success and 1 failure'
 	
@@ -110,6 +119,10 @@ if __name__ == '__main__':
 		parser = argparse.ArgumentParser()
 		parser.add_argument('-s', action='store', dest='cfgOrg',
 			help='Original configuration file')
+		parser.add_argument('-m', action='store', dest='cfgMerge',
+			help='Configuration file to merge')
+		parser.add_argument('-o', action='store', dest='cfgOut',
+			help='Configuration file to merge')
 		parser.add_argument('-i', action='store_true', default=False, dest='infoOnly')
 		parser.add_argument('-v', action='store_true', default=False, dest='verOnly')
 		parser.add_argument('-a', action='store_true', default=False, dest='archOnly')
@@ -117,6 +130,8 @@ if __name__ == '__main__':
 		if not arg.cfgOrg:
 			usage("Missing original configuration file")
 			sys.exit(1)
+		if arg.cfgMerge:
+			if not arg.cfgOut: arg.cfgOut='cfg'     #default output name
 		return arg
 	#main: demo the usage
 	arg=check_param()
@@ -124,6 +139,8 @@ if __name__ == '__main__':
 	ver, arch=cfg.getVerArch()
 	if arg.verOnly:	print ver
 	elif arg.archOnly: print arch
+	elif arg.cfgMerge or arg.cfgOut:
+		cfg.merge(arg.cfgMerge, arg.cfgOut)
 	else:
 		print ver, arch
 		for ln in cfg.getExtra(): print ln

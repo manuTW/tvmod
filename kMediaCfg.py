@@ -52,15 +52,13 @@ class cMediaCfg(cKconfig):
 if __name__ == '__main__':
 	def usage(reason):
 		if reason: print reason
-		print '  Usage: modCfg [-v] [-a] -s cfgOrg [-o cfgOut]'
+		print '  Usage: kMediaCfg.py [-v] [-a] -s cfgOrg [-m cfgMerge] [-o cfgOut]'
 		print '    if version of cfgOrg parsed, corresponding modify-ver is applied and output'
-		print '    -i: show all information, no further operation'
 		print '    -v: show kernel version, no further operation'
 		print '    -a: show architecture, no further operation'
-		print '    cfgOrg: original configuration file'
-		print '    cfgExt: extra configuration file. If not present, information of original'
-		print '            is displayed. Otherwise, a merged configuration generated'
-		print '    cfgOut: output configuration if cfgExt present. default to .config'
+		print '    -m: file to merge into original config to form the new config'
+		print '    -o: output file of the new config. When -m, cfg is the default output'
+		print '    -s: original configuration file'
 		print '  Ret: 0 success and 1 failure'
 	
 	# process parameters
@@ -70,16 +68,18 @@ if __name__ == '__main__':
 		parser = argparse.ArgumentParser()
 		parser.add_argument('-s', action='store', dest='cfgOrg',
 			help='Original configuration file')
-		parser.add_argument('-i', action='store_true', default=False, dest='infoOnly')
 		parser.add_argument('-v', action='store_true', default=False, dest='verOnly')
 		parser.add_argument('-a', action='store_true', default=False, dest='archOnly')
+		parser.add_argument('-m', action='store', dest='cfgMerge',
+			help='Configuration file to merge')
 		parser.add_argument('-o', action='store', dest='cfgOut',
-			default=".config",
-			help='Output configuration')
+			help='Configuration file to merge')
 		arg = parser.parse_args()
 		if not arg.cfgOrg:
 			usage("Missing original configuration file")
 			sys.exit(1)
+		if arg.cfgMerge:
+			if not arg.cfgOut: arg.cfgOut='cfg'     #default output name
 		return arg
 	#main: demo the usage
 	arg=check_param()
@@ -87,6 +87,8 @@ if __name__ == '__main__':
 	ver, arch=cfg.getVerArch()
 	if arg.verOnly:	print ver
 	elif arg.archOnly: print arch
+	elif arg.cfgMerge or arg.cfgOut:
+		cfg.merge(arg.cfgMerge, arg.cfgOut)
 	else:
 		print ver, arch
 		for ln in cfg.getExtra(): print ln
