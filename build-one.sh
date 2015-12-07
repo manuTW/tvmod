@@ -111,7 +111,6 @@ copy_mod() {
 
 #
 # make sure the configured kernel is media driver ready
-# the .add_media contains architecture it was built
 # In : $TOP_KDIR
 #      $KVER2
 #      $CUR_KDIR
@@ -119,22 +118,21 @@ copy_mod() {
 #      
 check_kdir() {
 	#make sure the kernel is media config enabled and make again
-#	local prevArch=`cat ${CUR_KDIR}/.add_media 2>/dev/null`
-	local theCfg=`ls ${M_PATH} |grep ${KVER}`
-	test -z "${theCfg}"&& echo "Find no config in ${M_PATH}" && exit
-	rm -f ${CUR_KDIR}/.config
-	#generate my version and then swap name
-	echo "Apply patch to ${M_PATH}/${theCfg}"
-	#-k generates a modified makefile named .mk
-	python modCfg.py -k -s ${M_PATH}/${theCfg} -o ${M_PATH}/mod.cfg
-	mv ${M_PATH}/${theCfg} ${M_PATH}/org.cfg
-	mv ${M_PATH}/mod.cfg ${M_PATH}/${theCfg}
+	#generate .mk and 
+	local cfg=`python QTS.py -m ${M_PATH}`
+	#generate a modified config
+	python kMediaCfg.py -s ${cfg} -m ${TOP_KDIR}/modify/modify-${KVER2}.cfg\
+		-o ${M_PATH}/mod.cfg
+	#generate a modified makefile
+	mv ${cfg} ${M_PATH}/org.cfg
+	mv ${M_PATH}/mod.cfg ${cfg}
 	pushd ${M_PATH} >/dev/null
 	make OPENSSL_VER=1.0 FACTORY_MODEL=no -f .mk >${LOG} 2>&1
 	popd >/dev/null
 	#restore
-	mv ${M_PATH}/org.cfg ${M_PATH}/${theCfg}
+	mv ${M_PATH}/org.cfg ${cfg}
 }
+
 
 parse_param $@
 LOG=`pwd`/${KVER}-${ARCH}.log
