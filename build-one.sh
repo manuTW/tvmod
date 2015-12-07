@@ -127,7 +127,7 @@ check_kdir() {
 	mv ${cfg} ${M_PATH}/org.cfg
 	mv ${M_PATH}/mod.cfg ${cfg}
 	pushd ${M_PATH} >/dev/null
-	make OPENSSL_VER=1.0 FACTORY_MODEL=no -f .mk >${LOG} 2>&1
+	make OPENSSL_VER=1.0 FACTORY_MODEL=no -f .mk >buildlog 2>&1
 	popd >/dev/null
 	#restore
 	mv ${M_PATH}/org.cfg ${cfg}
