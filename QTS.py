@@ -35,7 +35,7 @@ class cQTSmodel(object):
 					else:
 						if not ln.strip(): #an empty line
 							skip=False
-						wfd.writelines("%s" %ln)
+							wfd.writelines("%s" %ln)
 					#check if "make kernel" found
 					if not kernFound:
 						if re.search(r'^make kernel', ln.strip(), re.I):
@@ -128,7 +128,7 @@ if __name__ == '__main__':
 
 	#main: demo the usage
 	arg=check_param()
-	qts=cQTSmodel('../NasX86.4.2.1/Model/TS-X71/')
+	qts=cQTSmodel(arg.mdPath)
 	if arg.verOnly:
 		print qts.getKver()
 	if arg.cfgOnly:
