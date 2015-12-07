@@ -8,7 +8,11 @@ BUILDER_2="192.168.81.5:5000/mindspeed-builder"
 BUILDER_3="172.17.23.195:5000/pure_builder"
 CT_IMAGE="172.17.23.195:5000/ct_volume"
 CT_NAME="ct_volume_container"
-HOSTDIR=/home/$USER/working
+if [ -z "$WORKSPACE" ]; then
+	HOSTDIR=/home/$USER/working
+else
+	HOSTDIR=$WORKSPACE
+fi
 
 BUILDER_OPTS="
 	--privileged \
