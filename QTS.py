@@ -9,14 +9,15 @@ class cQTSmodel(object):
 	LOGFILE='buildlog'
 
 	# make in model path with mkfile
-	# In : mkfile - makefile
+	# In : mkfile - makefile relative to model path
 	#           none means use default makefile
 	#      _path - full path of model directory
 	#      _blog - build log file
-	def _doMake(self, mkfile=None):
-		if not mkfile: mkfile=self._mkfile
+	def doMake(self, mkfile=None):
+		if not mkfile: mkfile='.mk'
 		os.system('rm -f '+self._blog)
-		os.system('cd '+self._path+'; make -f '+mkfile+' >'+self._blog+' 2>&1')
+		os.system('cd '+self._path+'; make STORAGE_V2_UI4=yes OPENSSL_VER=1.0 FACTORY_MODEL=no -f '
+			+mkfile+' >'+self._blog+' 2>&1')
 		if not os.path.isfile(self._blog):
 			print 'Build might fail (', self._path, ')'
 
@@ -60,7 +61,7 @@ class cQTSmodel(object):
 	# Out : _kver and _kver2 (a.b.c and a.b respectively)
 	def _findKver(self):
 		if not os.path.isfile(self._blog):
-			self._doMake()
+			self.doMake()
 		with open(self._blog, 'r') as rfd:
 			for ln in rfd:
 				#a.b
@@ -105,6 +106,7 @@ class cQTSmodel(object):
 		else:
 			print "Missing makefile"
 			os.exit(1)
+		self._genKernelMk()
 		self._findKver()
 		#guess the configuration file
 		if self._kver:
@@ -119,7 +121,6 @@ class cQTSmodel(object):
 				print 'Fail to guess configuration file'
 				os.exit(1)
 			self._kdir=self._getKernDir()
-			self._genKernelMk()
 
 	#Ret : kernel version string a.b.c or a.b if successful
 	def getKver(self):
