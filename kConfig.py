@@ -91,6 +91,7 @@ class cKconfig(object):
 		return self._rmList
 
 	# Add configuration frome an to-merge file and those _extra
+	# NOTE: The original config file name is used
 	def merge(self, toMerge,output):
 		#no remove for now
 		os.system('cp '+self._srcFileName+' '+output)
