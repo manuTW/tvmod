@@ -9,7 +9,7 @@ BUILDER_3="172.17.23.195:5000/pure_builder"
 CT_IMAGE="172.17.23.195:5000/ct_volume"
 CT_NAME="ct_volume_container"
 if [ -z "$WORKSPACE" ]; then
-	HOSTDIR=/home/$USER/working
+	HOSTDIR=/home/$USER/working/tvmod
 else
 	HOSTDIR=$WORKSPACE
 fi
