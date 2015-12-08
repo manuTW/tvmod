@@ -37,7 +37,11 @@ parse_param() {
                 q) qts=$OPTARG;;
 		a)
 			case ${OPTARG} in
-			arm|x86_64) ARCH=${OPTARG};;
+			arm)
+				ARCH=${OPTARG}
+				export PATH=/opt/cross-project/arm/linaro/bin:$PATH
+				;;
+			x86_64) ARCH=${OPTARG};;
 			*) usage;;
 			esac
 			;;
@@ -75,25 +79,6 @@ parse_param() {
 
 
 #
-# Given input string containing file path of " xxxx/linux-abc/yyyy"
-# Ret : string "linux-a.b.c" as it in Kernel of QTS tree
-# $1 - intput string
-extract_linux() {
-	for elm in $1; do
-		if [[ "${elm}" =~ linux ]]; then
-			local NAME=`echo ${elm} |sed -e 's/\// /g'`
-			for nn in ${NAME}; do
-				if [[ ${nn} =~ linux ]]; then
-					echo ${nn}
-					return
-				fi
-			done
-		fi
-	done
-}
-
-
-#
 # Build media driver for each model described in MODEL_$ARCH 
 # In  : $SRC_DIR - root QTS directory
 #       $ARCH and $MODEL_$ARCH - architecture and model to build
@@ -102,6 +87,7 @@ do_build() {
 	#original log for version extraction
 	local log=buildlog
 	eval mlist=\$MODEL_${ARCH}
+	
 	for model in $mlist; do
 		test -n "${TEST}" && echo $model
 		#build all (kernel first)

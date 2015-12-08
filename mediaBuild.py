@@ -57,7 +57,6 @@ class cQTSmedia(object):
 		self._kver2=matchObj.group(0)
 		if 'arm' == self._arch:
 			self._preCmd='ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- '
-			os.system('export PATH=/opt/cross-project/arm/linaro/bin:$PATH')
 		else: self._preCmd='ARCH='+self._arch+' CROSS_COMPILE= '
 		
 		#set directory vars
