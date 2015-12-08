@@ -107,39 +107,7 @@ do_build() {
 		#build all (kernel first)
 		if [ -d ${SRC_DIR}/Model/${model} ]; then
 			echo to build ${SRC_DIR}/Model/${model}
-			pushd ${SRC_DIR}/Model/${model} >/dev/null
-			local top_kdir=${SRC_DIR}/Kernel
-			#build if log not present and not in test
-			test ! -f ${log} && {
-				local toBuild=1
-				[ -n "${TEST}" ] && {
-					echo -n "original model is not built, do it now ? (Y/n) "
-					read ans
-					case $ans in
-					n|N) toBuild=
-						;;
-					esac
-				}
-				test -n "${toBuild}" && \
-					make OPENSSL_VER=1.0 FACTORY_MODEL=no > ${log} 2>&1
-			}
-			#kdir is, for example, "linux-3.12.6"
-			local kstr=`grep Kernel ${log}| grep -m1 linux`
-			if [ -z "${kstr}" ]; then
-				echo "Find no kernel version in log ..."
-			else
-				local kdir=`extract_linux "${kstr}"`
-				if [ -f ${top_kdir}/${kdir}/Module.symvers ]; then
-					test -n "${TEST}" && echo start building
-					pushd ${SHELL_DIR} >/dev/null
-					./build-one.sh -v ${kdir#linux-} -a ${ARCH}\
-						-m ${SRC_DIR}/Model/${model} -d ${top_kdir}/${kdir}
-					popd >/dev/null
-				else
-					echo "${top_kdir}/${kdir} might not be fully built"
-				fi
-			fi
-			popd >/dev/null
+			python mediaBuild.py -m ${SRC_DIR}/Model/${model}
 		fi
 	done
 }
