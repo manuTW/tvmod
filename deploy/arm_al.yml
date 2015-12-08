@@ -1,11 +1,11 @@
 armBuild:
   image: 192.168.81.5:5000/builder
   user: root
-  working_dir: /root/tvmod
+  working_dir: /root
   privileged: true
   net: "host"
   volumes:
-    - "$HOME/workspace:/root"
+    - "$WORKSPACE:/root"
     - "/mnt/sourcetgz:/mnt/sourcetgz"
     - "/mnt/pub:/mnt/pub"
     - "/etc/localtime:/etc/localtime"
