@@ -62,9 +62,14 @@ class cQTSmodel(object):
 						self._kver=match.group(1)+'.'+match.group(2)
 					return
 
-	# In : full path of model path
+	# Guess the makefile, configuration file of a model. In the same time,
+	# a makefile is generated for kernel build
+	# In : modelPath - full path of model path
 	# Out: _arch - architecture string, 'x86_64', 'x86', or 'arm'
-	#      _version - version string 'a.b.c' or 'a.b'
+	#      _kver - version string 'a.b.c' or 'a.b'
+	#      _config - file name of the original kernel configuration
+	#      _path - full path of model directory
+	#      _mkfile - file name of the original makefile
 	def __init__(self, modelPath):
 		self._path=None
 		self._blog=None          #file name of buildlog
@@ -94,6 +99,9 @@ class cQTSmodel(object):
 				if re.search(self._kver, ff):
 					self._config=ff
 					break
+			if not self._config:
+				print 'Fail to guess configuration file'
+				os.exit(1)
 			self._genKernelMk()
 
 	#Ret : kernel version string a.b.c or a.b if successful
