@@ -5,7 +5,7 @@ armBuild:
   privileged: true
   net: "host"
   volumes:
-    - "$HOME/working:/root"
+    - "$HOME/workspace:/root"
     - "/mnt/sourcetgz:/mnt/sourcetgz"
     - "/mnt/pub:/mnt/pub"
     - "/etc/localtime:/etc/localtime"

@@ -7,7 +7,7 @@ x86Build:
   volumes_from:
     - ct_volume_container
   volumes:
-    - "$HOME/working:/root"
+    - "$HOME/workspace:/root"
     - "/mnt/sourcetgz:/mnt/sourcetgz"
     - "/mnt/pub:/mnt/pub"
     - "/etc/localtime:/etc/localtime"
