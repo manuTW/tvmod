@@ -20,6 +20,18 @@ class cQTSmodel(object):
 		if not os.path.isfile(self._blog):
 			print 'Build might fail (', self._path, ')'
 
+	# report full path target kernel directory in ../../Kernel
+	# In : _path
+	#      _kver
+	#      _kver2
+	# Ret: None - if no path kernel directory
+	#     otherwise - full path kernel directory 
+	def _getKernDir(self):
+		for ff in glob.glob(self._path+'/../../Kernel/linux-*'):
+			if self._kver and re.search(self._kver, ff): return ff
+			if self._kver2 and re.search(self._kver2, ff): return ff
+		return None
+
 	# generate a short version of makefile based on original one
 	# it does only kernel make
 	# In : _mkfile - original make file
@@ -45,6 +57,7 @@ class cQTSmodel(object):
 	# check the kernel version, build if not yet
 	# In : _blog
 	#      _path
+	# Out : _kver and _kver2 (a.b.c and a.b respectively)
 	def _findKver(self):
 		if not os.path.isfile(self._blog):
 			self._doMake()
@@ -53,13 +66,12 @@ class cQTSmodel(object):
 				#a.b
 				match=re.match(r'.*?Kernel/linux-(\d+)\.(\d+)', ln)
 				if match:
+					self._kver2=match.group(1)+'.'+match.group(2)
 					#a.b.c
 					match3=re.match(r'.*?Kernel/linux-(\d+)\.(\d+)\.(\d+)', ln)
 					if match3:
-						self._kver=match3.group(1)+'.'+match3.group(2)+\
-						'.'+match3.group(3)
-					else:
-						self._kver=match.group(1)+'.'+match.group(2)
+						self._kver=match3.group(1)+'.'+match3.group(2)+'.'+match3.group(3)
+					else: self._kver=self._kver2
 					return
 
 	# Guess the makefile, configuration file of a model. In the same time,
@@ -75,6 +87,7 @@ class cQTSmodel(object):
 		self._blog=None          #file name of buildlog
 		self._mkfile=None
 		self._kver=None          #kernel version from buildlog
+		self._kver2=None
 		self._config=None        #the configure files in Model directory
 		#determine full path
 		if not os.path.isdir(modelPath):
@@ -82,7 +95,7 @@ class cQTSmodel(object):
 			os.exit(1)
 		else:
 			#remove last / if present
-			self._path=re.sub(r'/$', "", os.path.abspath(modelPath))
+			self._path=re.sub(r'/*$', "", os.path.abspath(modelPath))
 			self._blog=self._path+'/'+self.LOGFILE
 		#determine makefile
 		if os.path.isfile(self._path+'/Makefile'):
@@ -99,15 +112,23 @@ class cQTSmodel(object):
 				if re.search(self._kver, ff):
 					self._config=ff
 					break
+				if re.search(self._kver2, ff):
+					self._config=ff
+					break
 			if not self._config:
 				print 'Fail to guess configuration file'
 				os.exit(1)
+			self._kdir=self._getKernDir()
 			self._genKernelMk()
 
 	#Ret : kernel version string a.b.c or a.b if successful
 	def getKver(self):
 		return self._kver
 
+	#Ret : kernel directory
+	def getKdir(self):
+		return self._kdir
+	
 	#Ret : configuration file corresponding to buildlog
 	def getCfg(self):
 		return self._config
@@ -141,5 +162,6 @@ if __name__ == '__main__':
 		print qts.getKver()
 	if arg.cfgOnly:
 		print qts.getCfg()
+	print qts.getKdir()
 	sys.exit(0)
 
