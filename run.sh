@@ -77,14 +77,20 @@ case "$1" in
 
   install)
     KVER2=`echo ${KERNEL_VER} |cut -f 1,2 -d"."`
+    #copy fw
     cp -a firmware/* ${LIB_FIRMWARE}
+
+    #pick module by ver/arch
     test -d release/${KERNEL_VER} && rdir=release/${KERNEL_VER}
     test -z "${rdir}" && test -d release/${KVER2} && rdir=release
     if [ -z "${rdir}" ]; then
 	echo "Fail to locate modules"
 	exit 1
+    elif [ ! -d ${rdir}/${ARCH} ]; then
+	echo "Architecture not supported"
+	exit 1
     fi
-    find ${rdir} \-name "*.ko" \-exec cp {} ${LIB_MODULE} \;
+    cp ${rdir}/${ARCH}/*.ko ${LIB_MODULE}
     ;;
   uninstall)
     ;;
