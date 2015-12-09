@@ -82,7 +82,7 @@ case "$1" in
 
     #pick module by ver/arch
     test -d release/${KERNEL_VER} && rdir=release/${KERNEL_VER}
-    test -z "${rdir}" && test -d release/${KVER2} && rdir=release
+    test -z "${rdir}" && test -d release/${KVER2} && rdir=release/${KVER2}
     if [ -z "${rdir}" ]; then
 	echo "Fail to locate modules"
 	exit 1
