@@ -9,5 +9,5 @@ for i in range(1, len(sys.argv)):
 		else:
 			print sys.argv+' doesn\'t exist'
 	else:
-		cmd='chown -R '+str(uid)+':'+str(gid)+' '+sys.argv[i]
-		print cmd
+		if os.path.exists(sys.argv[i]):
+			os.system('chown -R '+str(uid)+':'+str(gid)+' '+sys.argv[i])
