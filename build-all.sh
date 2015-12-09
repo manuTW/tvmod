@@ -32,9 +32,9 @@ usage() {
 parse_param() {
 	local qts
 	#parse option
-        while getopts "q:a:t" opt; do
-                case $opt in
-                q) qts=$OPTARG;;
+	while getopts "q:a:t" opt; do
+		case $opt in
+		q) qts=$OPTARG;;
 		a)
 			case ${OPTARG} in
 			arm)
@@ -46,9 +46,9 @@ parse_param() {
 			esac
 			;;
 		t) TEST=1;;
-                *) usage;;
-                esac
-        done
+		*) usage;;
+		esac
+	done
         OPTIND=1
 
 	test -z "${qts}" -o ! -f "${SRC_REPO}/${qts}" && echo "Missing QTS file ..." && usage
