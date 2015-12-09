@@ -90,9 +90,10 @@ class cQTSmedia(object):
 	# 2. collect ko into release directory
 	def buildMedia(self):
 		print 'Building media driver'
+		log=self._shellDir+'/kmedia.log'
 		cmd=self._preCmd+'make -C '+self._qtsKernelDir+' M='+self._moduleDir
 		os.system(cmd+' clean >/dev/null 2>&1')
-		os.system(cmd)
+		os.system(cmd+' >>'+log+' 2>&1')
 		if not os.path.isfile(self._moduleDir+'/dvb-core/dvb-core.ko'):
 			print "Missing dvb-core.ko, build might fail !"
 		os.system('mkdir -p '+self._releaseDir)
