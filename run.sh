@@ -4,7 +4,8 @@
 KERNEL_VER=`uname -r |sed s'/-/\./g' |cut -f 1,2,3 -d"."`
 ARCH=`uname -m`
 if [[ $ARCH =~ arm* ]]; then ARCH=arm; fi
-DVB_DIR=`pwd`
+#LIB_MODULE is defined as module path
+#LIB_FIRMWARE
 LOG_FILE=/tmp/dvb.log
 PATH=/bin:/sbin:$PATH
 
@@ -21,19 +22,8 @@ MOD_LIST="i2c-core rc-core dvb-core dvb-usb dvb_usb_v2 mxl5005s qt1010 mt2060 td
 # Insert kernel modules
 function check_load_modules()
 {
-	MOD_PATH=${DVB_DIR}/modules/${KERNEL_VER}/${ARCH}
-	FW_PATH=${DVB_DIR}/firmware
-	SYS_FW_PATH=/lib/firmware
+	MOD_PATH=${LIB_MODULE}
 	INS_LIST=
-
-	#deal with firmware
-	if [ -f ${SYS_FW_PATH} ]; then
-		if [ ! -e ${SYS_FW_PATH}/dvb-core.ko -a -d ${SYS_FW_PATH} ]; then
-			cp ${FW_PATH}/* ${SYS_FW_PATH}
-		fi
-	else
-		ln -s ${FW_PATH} ${SYS_FW_PATH}
-	fi
 
 	#load
 	for mm in ${MOD_LIST}; do
@@ -86,6 +76,16 @@ case "$1" in
     ;;
 
   install)
+    KVER2=`echo ${KERNEL_VER} |cut -f 1,2 -d"."`
+    cp -a firmware/* ${LIB_FIRMWARE}
+    test -d release/${KERNEL_VER} && rdir=release/${KERNEL_VER}
+    test -z "${rdir}" && test -d release/${KVER2} && rdir=release
+    if [ -z "${rdir}" ]; then
+	echo "Fail to locate modules"
+	exit 1
+    fi
+    find ${rdir} \-name "*.ko" \-exec cp {} ${LIB_MODULE} \;
+    ;;
   uninstall)
     ;;
   *)
