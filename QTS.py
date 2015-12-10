@@ -135,7 +135,7 @@ class cQTSmodel(object):
 		return self._config
 
 if __name__ == '__main__':
-	def usage(reason):
+	def usage(reason=None):
 		if reason: print reason
 		print '  Usage: QTS.py -m modelPath [-c] [-v]'
 		print '    generate \'.mk\' in model path'

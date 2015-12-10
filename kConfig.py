@@ -101,7 +101,7 @@ class cKconfig(object):
 			os.system('echo '+ln+' >>'+output)
 
 if __name__ == '__main__':
-	def usage(reason):
+	def usage(reason=None):
 		if reason: print reason
 		print '  Usage: kConfig.py [-v] [-a] -s cfgOrg [-m cfgMerge] [-o cfgOut]'
 		print '    if version of cfgOrg parsed, corresponding modify-ver is applied and output'

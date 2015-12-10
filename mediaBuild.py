@@ -104,7 +104,7 @@ class cQTSmedia(object):
 
 #main
 if '__main__' == __name__:
-	def usage(reason):
+	def usage(reason=None):
 		if reason: print reason
 		print '  Usage: mediaBuild.py -m modelPath'
 		print '  Ret: 0 success and 1 failure'
