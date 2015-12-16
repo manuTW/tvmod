@@ -78,6 +78,10 @@ class cQTSmedia(object):
 		os.system('rm -f '+self._qtsKernelDir+'/.config')
 		#generate .cfg in model dir
 		self._cfg.merge(self._modifyCfg, self._modelDir+'/.cfg')
+		#add net
+		path=self._shellDir+'/net/modify.cfg'
+		if os.path.isfile(path):
+			os.system('cat '+path+' >>'+self._modelDir+'/.cfg')
 		#swap
 		os.system('mv '+self._qtsCfgName+' '+self._modelDir+'/.bak')
 		os.system('mv '+self._modelDir+'/.cfg '+self._qtsCfgName)
