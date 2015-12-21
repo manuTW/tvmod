@@ -103,4 +103,4 @@ parse_param $@
 do_build
 python chownOfFirst.py media .git .ccache release media
 #this might fail unless we build NasX separately
-[ ${ARCH} = 'x86_64' ] && rm -rf NasX86.4.2.1 NasX86.4.2.0 NasX86.4.2.1
+#[ ${ARCH} = 'x86_64' ] && rm -rf NasX86.4.2.1 NasX86.4.2.0 NasX86.4.2.1
