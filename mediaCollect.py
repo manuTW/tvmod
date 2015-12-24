@@ -72,7 +72,7 @@ class cMediaStore(object):
 if '__main__' == __name__:
 	def usage(reason=None):
 		if reason: print reason
-		print '  Usage: mediaCollect.py repositoryPath'
+		print '  Usage: mediaCollect.py repositoryPath modulePath'
 		print '  Ret: 0 success and 1 failure'
 
 	#main
@@ -81,5 +81,7 @@ if '__main__' == __name__:
 		sys.exit(1)
 	else:
 		store=cMediaStore(sys.argv[1])
-		store.addRelease()
+		if len(sys.argv) is 3:
+			store.addRelease(sys.argv[2])
+		else: store.addRelease()
 		sys.exit(0)
