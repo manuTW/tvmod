@@ -93,12 +93,13 @@ class cQTSmedia(object):
 		if not os.path.isfile(self._qtsKernelDir+'/.config'):
 			print 'Build '+self._qtsKernelDir+' might fail'
 		#misc object in kernel tree
-		os.system('mkdir -p '+self._releaseMiscDir)
-		cmd='cp '+self._qtsKernelDir+'/driver/net/vxlan.ko '+\
-			self._qtsKernelDir+'/net/ipv4/udp_tunnel.ko '+\
-			self._qtsKernelDir+'/net/ipv6/ip6_udp_tunnel.ko '+\
-			self._releaseMiscDir
-		os.system(cmd)
+		if os.path.isfile(self._qtsKernelDir+'/drivers/net/vxlan.ko'):
+			os.system('mkdir -p '+self._releaseMiscDir)
+			cmd='cp '+self._qtsKernelDir+'/drivers/net/vxlan.ko '+\
+				self._qtsKernelDir+'/net/ipv4/udp_tunnel.ko '+\
+				self._qtsKernelDir+'/net/ipv6/ip6_udp_tunnel.ko '+\
+				self._releaseMiscDir
+			os.system(cmd)
 
 
 	# 1. build media against kernel tree of this model
