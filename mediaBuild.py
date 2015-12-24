@@ -61,6 +61,8 @@ class cQTSmedia(object):
 		
 		#set directory vars
 		self._releaseDir=self._shellDir+'/release/'+self._kver+'/'+self._arch
+		#for network driver today
+		self._releaseMiscDir=self._shellDir+'/release_misc/'+self._kver+'/'+self._arch
 		self._moduleDir=self._shellDir+'/media/'+self._kver2
 		self._modifyCfg=self._getModifyCfg()
 		if not self._modifyCfg:
@@ -69,6 +71,7 @@ class cQTSmedia(object):
 		if not self._qtsKernelDir:
 			print 'Find no kernel '+self._kver+' for '+self._modelDir
 			sys.exit(1)
+
 
 	# 1. synthesize a configuration file in model dir
 	# 2. build model (kernel only most likely)
@@ -89,6 +92,14 @@ class cQTSmedia(object):
 		os.system('mv '+self._modelDir+'/.bak '+self._qtsCfgName)
 		if not os.path.isfile(self._qtsKernelDir+'/.config'):
 			print 'Build '+self._qtsKernelDir+' might fail'
+		#misc object in kernel tree
+		os.system('mkdir -p '+self._releaseMiscDir)
+		cmd='cp '+self._qtsKernelDir+'/driver/net/vxlan.ko '+
+			self._qtsKernelDir+'/net/ipv4/udp_tunnel.ko '+
+			self._qtsKernelDir+'/net/ipv6/ip6_udp_tunnel.ko '+
+			self._releaseMiscDir
+		os.system(cmd)
+
 
 	# 1. build media against kernel tree of this model
 	# 2. collect ko into release directory
