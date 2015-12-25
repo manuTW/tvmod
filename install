@@ -6,7 +6,11 @@ ARCH=`uname -m`
 if [[ $ARCH =~ arm* ]]; then ARCH=arm; fi
 
 #todo hardcoding
-VERMAGIC=3.12.6-SMP-mod_unload
+if [ -z "VERMAGIC " ]; then
+	VERMAGIC=3.12.6-SMP-mod_unload
+else
+	VERMAGIC=`echo $VERMAGIC| sed s'/ /-/g'`
+fi
 #VERMAGIC=3.10.20-al-2.5.3_sa-SMP-mod_unload-ARMv7-p2v8
 #VERMAGIC=3.19.8-SMP-mod_unload
 
@@ -92,8 +96,8 @@ case "$1" in
     #copy fw
 	
 	test ! -f /lib/modules.tgz && echo "Missing modules" && exit 1
-	SRC_DIR=/lib/modules
-	cd /lib; tar xf modules.tgz
+	SRC_DIR=/lib/tv/modules
+	cd /lib/tv; tar xf modules.tgz
 	cp -a ${SRC_DIR}/firmware/* ${LIB_FIRMWARE}
 
     #pick module by ver/arch
@@ -107,7 +111,7 @@ case "$1" in
 		exit 1
 	fi
 	cp ${rdir}/${ARCH}/${VERMAGIC}/*.ko ${LIB_MODULE}
-	cp ${SRC_DIR}/install ${LIB_MODULE}/rc
+	cp ${SRC_DIR}/install ${APP_DIR}/run.sh
 	;;
   uninstall)
     ;;
