@@ -97,7 +97,7 @@ case "$1" in
 	KVER2=`echo ${KERNEL_VER} |cut -f 1,2 -d"."`
     #copy fw
 	
-	test ! -f /lib/modules.tgz && echo "Missing modules" && exit 1
+	test ! -f /lib/tv/modules.tgz && echo "Missing modules" && exit 1
 	SRC_DIR=/lib/tv/modules
 	cd /lib/tv; tar xf modules.tgz
 	cp -a ${SRC_DIR}/firmware/* ${LIB_FIRMWARE}
