@@ -28,7 +28,7 @@ MOD_LIST="i2c-core rc-core dvb-core dvb-usb dvb_usb_v2 mxl5005s qt1010 mt2060 td
 	xc5000 xc4000 tveeprom videobuf-core videobuf-vmalloc tda18272 cx2341x cx231xx s5h1432\
 	cx231xx-dvb cx231xx-alsa au8522 au0828 dib9000 dvb-usb-dib0700\
 	dvb-usb-rtl2832 rtl2832 rtl2830 dvb-usb-rtl28xxu it913x-fe\
-	dvb-usb-it913x af9033 fc0011 dvb-usb-af9035 dvb-usb-dtt200u"
+	dvb-usb-it913x af9033 fc0011 fc0012 dvb-usb-af9035 dvb-usb-dtt200u"
 
 
 # Insert kernel modules
