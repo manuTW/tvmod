@@ -58,7 +58,7 @@
 
 #endif
 
-static int rtl28xxu_disable_rc;
+static int rtl28xxu_disable_rc=1;
 module_param_named(disable_rc, rtl28xxu_disable_rc, int, 0644);
 MODULE_PARM_DESC(disable_rc, "disable RTL2832U remote controller");
 DVB_DEFINE_MOD_OPT_ADAPTER_NR(adapter_nr);
