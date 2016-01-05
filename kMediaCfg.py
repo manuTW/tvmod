@@ -6,7 +6,8 @@ import re
 class cMediaCfg(cKconfig):
 	DVB_CORE_SETTING=('CONFIG_DVB_CORE=m', 'CONFIG_DVB_MAX_ADAPTERS=8', \
 				'CONFIG_DVB_DYNAMIC_MINORS=y')
-	RC_CORE_SETTING=('CONFIG_MEDIA_RC_SUPPORT=y', 'CONFIG_RC_CORE=m')
+	RC_CORE_SETTING=('CONFIG_MEDIA_RC_SUPPORT=y')
+	RC_CORE1_SETTING=('CONFIG_RC_CORE=m')
 
 	@dec_parser
 	def _parser(self, line):
@@ -16,6 +17,9 @@ class cMediaCfg(cKconfig):
 		if re.search(r'CONFIG_MEDIA_RC_SUPPORT=y', line, re.I):
 			self._rc_coreEnable=True
 			return 'continue'
+		if re.search(r'CONFIG_RC_CORE=', line, re.I):
+			self._rc_core1Enable=True
+			return 'continue'
 		return None
 		
 	# In : full path configuratin file
@@ -23,6 +27,7 @@ class cMediaCfg(cKconfig):
 	#      _version - version string 'a.b.c' or 'a.b'
 	def __init__(self, cfgName):
 		self._rc_coreEnable=False
+		self._rc_core1Enable=False
 		self._dvb_coreEnable=False
 		super(cMediaCfg, self).__init__(cfgName)
 		#append our extra lines
@@ -32,7 +37,10 @@ class cMediaCfg(cKconfig):
 		if not self._dvb_coreEnable:
 			for item in self.DVB_CORE_SETTING:
 				self._extra.append(item)
-
+		if not self._rc_core1Enable:
+			for item in self.RC_CORE1_SETTING:
+				self._extra.append(item)
+				
 	#Ret : None - no alter since it is 'y'
 	#      otherwise - tuple to write to configure file
 	def getDVB(self):
@@ -45,9 +53,20 @@ class cMediaCfg(cKconfig):
 	#      otherwise - tuple to write to configure file
 	def getRC(self):
 		if self._rc_coreEnable:
-			return ()
+			if self._rc_core1Enable:
+				return ()
+			else:
+				return self.RC_CORE1_SETTING
 		else:
-			return self.RC_CORE_SETTING
+			if self._rc_core1Enable:
+				return self.RC_CORE_SETTING
+			else:
+				theList=[]
+				for item in self.RC_CORE1_SETTING:
+					theList.append(item)
+				for item in self.RC_CORE_SETTING:
+					theList.append(item)
+				return theList
 
 if __name__ == '__main__':
 	def usage(reason=None):
